@@ -8,11 +8,14 @@ const wss = new WebSocket.Server({ server });
 
 app.use(express.static('public'));
 
-const clients = new Map(); // {id: {ws, username, audio: bool, stream: bool}}
+const clients = new Map();
 
 wss.on('connection', (ws) => {
+    console.log('Yeni istemci bağlandı');
     ws.on('message', (message) => {
         const data = JSON.parse(message);
+        console.log('Gelen mesaj:', data);
+
         if (data.type === 'join') {
             const id = Date.now();
             clients.set(id, { ws, username: data.username, audio: false, stream: false });
@@ -36,10 +39,15 @@ wss.on('connection', (ws) => {
     });
 
     ws.on('close', () => {
-        const id = [...clients.entries()].find(([_, client]) => client.ws === ws)[0];
-        clients.delete(id);
-        broadcastUserList();
+        const id = [...clients.entries()].find(([_, client]) => client.ws === ws)?.[0];
+        if (id) {
+            clients.delete(id);
+            console.log(`İstemci ayrıldı: ${id}`);
+            broadcastUserList();
+        }
     });
+
+    ws.on('error', (error) => console.error('WebSocket hatası:', error));
 });
 
 function broadcastUserList() {
@@ -49,6 +57,7 @@ function broadcastUserList() {
         audio: client.audio,
         stream: client.stream
     }));
+    console.log('Kullanıcı listesi güncellendi:', userList);
     broadcast({ type: 'userList', users: userList });
 }
 
@@ -64,9 +73,11 @@ function sendTo(id, message) {
     const client = clients.get(id);
     if (client && client.ws.readyState === WebSocket.OPEN) {
         client.ws.send(JSON.stringify(message));
+    } else {
+        console.log(`Hedef istemci bulunamadı veya kapalı: ${id}`);
     }
 }
 
-server.listen(process.env.PORT || 3000, () => {
-    console.log('Server çalışıyor');
+server.listen(3000, () => {
+    console.log('Server http://localhost:3000 adresinde çalışıyor');
 });
