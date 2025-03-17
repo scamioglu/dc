@@ -9,8 +9,10 @@
         #sidebar { width: 250px; padding: 10px; background: #fff; border-radius: 5px; }
         #main { flex: 1; padding: 0 20px; }
         video { width: 100%; max-width: 600px; background-color: black; margin: 10px 0; }
-        button { padding: 8px 16px; margin: 5px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
-        button:hover { background-color: #45a049; }
+        button { padding: 8px 16px; margin: 5px; color: white; border: none; cursor: pointer; }
+        .inactive { background-color: #ff4444; } /* Kırmızı */
+        .active { background-color: #4CAF50; } /* Yeşil */
+        button:hover { filter: brightness(90%); }
         #controls { margin: 20px 0; }
         #userList div { margin: 5px 0; display: flex; align-items: center; justify-content: space-between; }
         #login { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
@@ -33,9 +35,9 @@
         <div id="main">
             <h1>Sesli Sohbet ve Ekran Paylaşımı</h1>
             <div id="controls">
-                <button onclick="toggleAudio()">Ses: <span id="audioState">Kapalı</span></button>
-                <button onclick="toggleStream()">Yayın: <span id="streamState">Kapalı</span></button>
-                <button onclick="stopStreams()">Durdur</button>
+                <button id="audioBtn" class="inactive" onclick="toggleAudio()">Ses: <span id="audioState">Kapalı</span></button>
+                <button id="streamBtn" class="inactive" onclick="toggleStream()">Yayın: <span id="streamState">Kapalı</span></button>
+                <button id="stopBtn" class="inactive" onclick="stopStreams()">Durdur</button>
             </div>
             <div class="video-container">
                 <video id="localVideo" autoplay playsinline muted></video>
@@ -55,6 +57,8 @@
         const localVideo = document.getElementById('localVideo');
         const remoteVideos = document.getElementById('remoteVideos');
         const userList = document.getElementById('userList');
+        const audioBtn = document.getElementById('audioBtn');
+        const streamBtn = document.getElementById('streamBtn');
 
         ws = new WebSocket('ws://localhost:3000');
         ws.onopen = () => console.log('WebSocket bağlandı');
@@ -83,6 +87,7 @@
                 const enabled = !localStream.getAudioTracks()[0].enabled;
                 localStream.getAudioTracks()[0].enabled = enabled;
                 document.getElementById('audioState').textContent = enabled ? 'Açık' : 'Kapalı';
+                audioBtn.className = enabled ? 'active' : 'inactive';
                 ws.send(JSON.stringify({ type: 'toggleAudio', id: myId, state: enabled }));
             } catch (error) {
                 console.error('Ses hatası:', error);
@@ -104,6 +109,7 @@
                 const enabled = !localStream.getVideoTracks()[0].enabled;
                 localStream.getVideoTracks()[0].enabled = enabled;
                 document.getElementById('streamState').textContent = enabled ? 'Açık' : 'Kapalı';
+                streamBtn.className = enabled ? 'active' : 'inactive';
                 ws.send(JSON.stringify({ type: 'toggleStream', id: myId, state: enabled }));
             } catch (error) {
                 console.error('Yayın hatası:', error);
@@ -259,6 +265,7 @@
                 userList.appendChild(div);
             });
             console.log('Kullanıcı listesi güncellendi:', users);
+            if (localStream) broadcastStream(); // Yeni kullanıcı varsa yayını gönder
         }
 
         function muteUser(targetId) {
@@ -293,6 +300,8 @@
             peerConnections.clear();
             document.getElementById('audioState').textContent = 'Kapalı';
             document.getElementById('streamState').textContent = 'Kapalı';
+            audioBtn.className = 'inactive';
+            streamBtn.className = 'inactive';
             ws.send(JSON.stringify({ type: 'toggleAudio', id: myId, state: false }));
             ws.send(JSON.stringify({ type: 'toggleStream', id: myId, state: false }));
         }
