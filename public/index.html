@@ -19,6 +19,11 @@
         input { padding: 5px; margin: 5px; width: 200px; }
         .video-container { position: relative; }
         .fullscreen-btn { position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.7); }
+        .status-icon { display: inline-block; width: 20px; height: 20px; margin: 0 5px; text-align: center; line-height: 20px; border-radius: 50%; }
+        .mic-on { background-color: #4CAF50; }
+        .mic-off { background-color: #ff4444; }
+        .screen-on { background-color: #4CAF50; }
+        .screen-off { background-color: #ff4444; }
     </style>
 </head>
 <body>
@@ -52,7 +57,12 @@
         let ws;
         let myId;
         let mutedUsers = new Set();
-        const configuration = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+        const configuration = {
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' }
+            ]
+        };
 
         const localVideo = document.getElementById('localVideo');
         const remoteVideos = document.getElementById('remoteVideos');
@@ -60,7 +70,6 @@
         const audioBtn = document.getElementById('audioBtn');
         const streamBtn = document.getElementById('streamBtn');
 
-        // Render URL’sini dinamik alıyoruz
         const wsUrl = `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}`;
         ws = new WebSocket(wsUrl);
         ws.onopen = () => console.log('WebSocket bağlandı:', wsUrl);
@@ -155,10 +164,12 @@
                 pc.onicecandidate = (event) => {
                     if (event.candidate) {
                         ws.send(JSON.stringify({ type: 'candidate', candidate: event.candidate, to }));
+                        console.log('ICE candidate gönderildi:', to);
                     }
                 };
 
                 pc.ontrack = (event) => {
+                    console.log('Yeni track alındı:', to);
                     if (!mutedUsers.has(to)) {
                         let container = document.getElementById(`remote-container-${to}`);
                         if (!container) {
@@ -181,6 +192,10 @@
                     }
                 };
 
+                pc.oniceconnectionstatechange = () => {
+                    console.log(`ICE connection state (${to}):`, pc.iceConnectionState);
+                };
+
                 const offer = await pc.createOffer();
                 await pc.setLocalDescription(offer);
                 ws.send(JSON.stringify({ type: 'offer', offer, from: myId, to }));
@@ -201,10 +216,12 @@
                 pc.onicecandidate = (event) => {
                     if (event.candidate) {
                         ws.send(JSON.stringify({ type: 'candidate', candidate: event.candidate, to: from }));
+                        console.log('ICE candidate gönderildi:', from);
                     }
                 };
 
                 pc.ontrack = (event) => {
+                    console.log('Yeni track alındı:', from);
                     if (!mutedUsers.has(from)) {
                         let container = document.getElementById(`remote-container-${from}`);
                         if (!container) {
@@ -225,6 +242,10 @@
                         }
                         container.querySelector(`#remote-${from}`).srcObject = event.streams[0];
                     }
+                };
+
+                pc.oniceconnectionstatechange = () => {
+                    console.log(`ICE connection state (${from}):`, pc.iceConnectionState);
                 };
             } catch (error) {
                 console.error('Offer işleme hatası:', error);
@@ -259,9 +280,9 @@
                 const div = document.createElement('div');
                 div.dataset.id = user.id;
                 div.innerHTML = `
-                    ${user.username} 
-                    (Ses: ${user.audio ? 'Açık' : 'Kapalı'}, 
-                    Yayın: ${user.stream ? 'Açık' : 'Kapalı'})
+                    ${user.username}
+                    <span class="status-icon ${user.audio ? 'mic-on' : 'mic-off'}">🎤</span>
+                    <span class="status-icon ${user.stream ? 'screen-on' : 'screen-off'}">🖥️</span>
                     <button onclick="muteUser(${user.id})">${mutedUsers.has(user.id) ? 'Sesi Aç' : 'Mute'}</button>
                 `;
                 userList.appendChild(div);
