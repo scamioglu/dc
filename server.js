@@ -70,8 +70,6 @@ function broadcast(message) {
     clients.forEach((client) => {
         if (client.ws.readyState === WebSocket.OPEN) {
             client.ws.send(JSON.stringify(message));
-        } else {
-            console.log('Bağlantı kapalı olan istemci:', client);
         }
     });
 }
@@ -85,6 +83,7 @@ function sendTo(id, message) {
     }
 }
 
-server.listen(3000, () => {
-    console.log('Server http://localhost:3000 adresinde çalışıyor');
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+    console.log(`Server ${PORT} portunda çalışıyor`);
 });
