@@ -60,7 +60,11 @@
         const configuration = {
             iceServers: [
                 { urls: 'stun:stun.l.google.com:19302' },
-                { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' }
+                {
+                    urls: 'turn:turn.anyfirewall.com:443?transport=tcp',
+                    username: 'webrtc',
+                    credential: 'webrtc'
+                }
             ]
         };
 
@@ -93,6 +97,7 @@
                 if (!localStream || !localStream.getAudioTracks().length) {
                     localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
                     localVideo.srcObject = localStream;
+                    console.log('Ses akışı başlatıldı:', localStream.getAudioTracks());
                     broadcastStream();
                 }
                 const enabled = !localStream.getAudioTracks()[0].enabled;
@@ -115,6 +120,7 @@
                         localStream = screenStream;
                     }
                     localVideo.srcObject = localStream;
+                    console.log('Yayın akışı başlatıldı:', localStream.getVideoTracks());
                     broadcastStream();
                 }
                 const enabled = !localStream.getVideoTracks()[0].enabled;
@@ -159,17 +165,20 @@
             try {
                 const pc = new RTCPeerConnection(configuration);
                 peerConnections.set(to, pc);
-                localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+                localStream.getTracks().forEach(track => {
+                    pc.addTrack(track, localStream);
+                    console.log(`Track eklendi (${to}):`, track);
+                });
 
                 pc.onicecandidate = (event) => {
                     if (event.candidate) {
                         ws.send(JSON.stringify({ type: 'candidate', candidate: event.candidate, to }));
-                        console.log('ICE candidate gönderildi:', to);
+                        console.log('ICE candidate gönderildi:', to, event.candidate);
                     }
                 };
 
                 pc.ontrack = (event) => {
-                    console.log('Yeni track alındı:', to);
+                    console.log(`Yeni track alındı (${to}):`, event.streams[0].getTracks());
                     if (!mutedUsers.has(to)) {
                         let container = document.getElementById(`remote-container-${to}`);
                         if (!container) {
@@ -194,6 +203,9 @@
 
                 pc.oniceconnectionstatechange = () => {
                     console.log(`ICE connection state (${to}):`, pc.iceConnectionState);
+                    if (pc.iceConnectionState === 'failed') {
+                        console.error('ICE bağlantısı başarısız oldu:', to);
+                    }
                 };
 
                 const offer = await pc.createOffer();
@@ -216,12 +228,12 @@
                 pc.onicecandidate = (event) => {
                     if (event.candidate) {
                         ws.send(JSON.stringify({ type: 'candidate', candidate: event.candidate, to: from }));
-                        console.log('ICE candidate gönderildi:', from);
+                        console.log('ICE candidate gönderildi:', from, event.candidate);
                     }
                 };
 
                 pc.ontrack = (event) => {
-                    console.log('Yeni track alındı:', from);
+                    console.log(`Yeni track alındı (${from}):`, event.streams[0].getTracks());
                     if (!mutedUsers.has(from)) {
                         let container = document.getElementById(`remote-container-${from}`);
                         if (!container) {
@@ -246,6 +258,9 @@
 
                 pc.oniceconnectionstatechange = () => {
                     console.log(`ICE connection state (${from}):`, pc.iceConnectionState);
+                    if (pc.iceConnectionState === 'failed') {
+                        console.error('ICE bağlantısı başarısız oldu:', from);
+                    }
                 };
             } catch (error) {
                 console.error('Offer işleme hatası:', error);
