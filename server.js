@@ -35,8 +35,12 @@ wss.on('connection', (ws) => {
             } else if (data.type === 'toggleStream') {
                 clients.get(data.id).stream = data.state;
                 broadcastUserList();
+            } else if (data.type === 'requestStream') {
+                sendTo(data.to, { type: 'requestStream', from: data.from });
             } else if (data.type === 'muteUser') {
                 broadcast({ type: 'muteUser', targetId: data.targetId, muted: data.muted });
+            } else if (data.type === 'volumeChange') {
+                broadcast({ type: 'volumeChange', targetId: data.targetId, volume: data.volume });
             }
         } catch (error) {
             console.error('Mesaj işleme hatası:', error);
