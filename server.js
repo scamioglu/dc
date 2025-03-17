@@ -12,29 +12,34 @@ const clients = new Map();
 
 wss.on('connection', (ws) => {
     console.log('Yeni istemci bağlandı');
-    ws.on('message', (message) => {
-        const data = JSON.parse(message);
-        console.log('Gelen mesaj:', data);
 
-        if (data.type === 'join') {
-            const id = Date.now();
-            clients.set(id, { ws, username: data.username, audio: false, stream: false });
-            ws.send(JSON.stringify({ type: 'id', id }));
-            broadcastUserList();
-        } else if (data.type === 'offer') {
-            sendTo(data.to, { type: 'offer', offer: data.offer, from: data.from });
-        } else if (data.type === 'answer') {
-            sendTo(data.to, { type: 'answer', answer: data.answer, from: data.from });
-        } else if (data.type === 'candidate') {
-            sendTo(data.to, { type: 'candidate', candidate: data.candidate, from: data.from });
-        } else if (data.type === 'toggleAudio') {
-            clients.get(data.id).audio = data.state;
-            broadcastUserList();
-        } else if (data.type === 'toggleStream') {
-            clients.get(data.id).stream = data.state;
-            broadcastUserList();
-        } else if (data.type === 'muteUser') {
-            broadcast({ type: 'muteUser', targetId: data.targetId, muted: data.muted });
+    ws.on('message', (message) => {
+        try {
+            const data = JSON.parse(message);
+            console.log('Gelen mesaj:', data);
+
+            if (data.type === 'join') {
+                const id = Date.now();
+                clients.set(id, { ws, username: data.username, audio: false, stream: false });
+                ws.send(JSON.stringify({ type: 'id', id }));
+                broadcastUserList();
+            } else if (data.type === 'offer') {
+                sendTo(data.to, { type: 'offer', offer: data.offer, from: data.from });
+            } else if (data.type === 'answer') {
+                sendTo(data.to, { type: 'answer', answer: data.answer, from: data.from });
+            } else if (data.type === 'candidate') {
+                sendTo(data.to, { type: 'candidate', candidate: data.candidate, from: data.from });
+            } else if (data.type === 'toggleAudio') {
+                clients.get(data.id).audio = data.state;
+                broadcastUserList();
+            } else if (data.type === 'toggleStream') {
+                clients.get(data.id).stream = data.state;
+                broadcastUserList();
+            } else if (data.type === 'muteUser') {
+                broadcast({ type: 'muteUser', targetId: data.targetId, muted: data.muted });
+            }
+        } catch (error) {
+            console.error('Mesaj işleme hatası:', error);
         }
     });
 
@@ -65,6 +70,8 @@ function broadcast(message) {
     clients.forEach((client) => {
         if (client.ws.readyState === WebSocket.OPEN) {
             client.ws.send(JSON.stringify(message));
+        } else {
+            console.log('Bağlantı kapalı olan istemci:', client);
         }
     });
 }
