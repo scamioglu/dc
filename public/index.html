@@ -10,8 +10,8 @@
         #main { flex: 1; padding: 0 20px; }
         video { width: 100%; max-width: 600px; background-color: black; margin: 10px 0; }
         button { padding: 8px 16px; margin: 5px; color: white; border: none; cursor: pointer; }
-        .inactive { background-color: #ff4444; } /* Kırmızı */
-        .active { background-color: #4CAF50; } /* Yeşil */
+        .inactive { background-color: #ff4444; }
+        .active { background-color: #4CAF50; }
         button:hover { filter: brightness(90%); }
         #controls { margin: 20px 0; }
         #userList div { margin: 5px 0; display: flex; align-items: center; justify-content: space-between; }
@@ -60,8 +60,10 @@
         const audioBtn = document.getElementById('audioBtn');
         const streamBtn = document.getElementById('streamBtn');
 
-        ws = new WebSocket('ws://localhost:3000');
-        ws.onopen = () => console.log('WebSocket bağlandı');
+        // Render URL’sini dinamik alıyoruz
+        const wsUrl = `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}`;
+        ws = new WebSocket(wsUrl);
+        ws.onopen = () => console.log('WebSocket bağlandı:', wsUrl);
         ws.onmessage = handleSignaling;
         ws.onerror = (error) => console.error('WebSocket hatası:', error);
         ws.onclose = () => console.log('WebSocket bağlantısı kapandı');
@@ -265,7 +267,7 @@
                 userList.appendChild(div);
             });
             console.log('Kullanıcı listesi güncellendi:', users);
-            if (localStream) broadcastStream(); // Yeni kullanıcı varsa yayını gönder
+            if (localStream) broadcastStream();
         }
 
         function muteUser(targetId) {
