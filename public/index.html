@@ -62,6 +62,7 @@
             padding: 10px;
             margin-bottom: 10px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            position: relative;
         }
         #streamArea video {
             width: 100%;
@@ -77,6 +78,25 @@
             height: 100vh;
             z-index: 2000;
             background: #000;
+        }
+        .stream-controls {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            display: flex;
+            gap: 10px;
+        }
+        .stream-control-icon {
+            font-size: 20px;
+            color: #fff;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 5px;
+            border-radius: 50%;
+            transition: background 0.3s;
+        }
+        .stream-control-icon:hover {
+            background: rgba(255, 255, 255, 0.3);
         }
         #chatInputArea {
             width: 100%;
@@ -160,6 +180,8 @@
             align-items: center;
             justify-content: space-between;
             transition: background 0.3s;
+            position: relative;
+            cursor: pointer;
         }
         #userList div:hover {
             background: rgba(255, 255, 255, 0.2);
@@ -253,6 +275,35 @@
         .popup button:hover {
             background: #45a049;
         }
+        .user-options {
+            display: none;
+            position: absolute;
+            top: 50px;
+            left: 0;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            width: 200px;
+        }
+        .user-options button {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .user-options button:hover {
+            background: #45a049;
+        }
+        .user-options input[type="range"] {
+            width: 100%;
+        }
     </style>
 </head>
 <body>
@@ -306,6 +357,10 @@
         <div id="main">
             <div id="streamArea">
                 <video id="streamVideo" autoplay playsinline controls></video>
+                <div class="stream-controls">
+                    <span class="stream-control-icon" onclick="toggleStreamMute()">🔊</span>
+                    <span class="stream-control-icon" onclick="toggleFullscreen()">⛶</span>
+                </div>
             </div>
             <div id="chatArea"></div>
             <div id="chatInputArea">
@@ -328,6 +383,7 @@
         let streamPeerConnection = null;
         let usernameColors = {};
         let pendingOffers = new Map();
+        let isStreamMuted = false;
         const configuration = {
             iceServers: [
                 { urls: 'stun:stun.l.google.com:19302' },
@@ -362,7 +418,6 @@
         const streamArea = document.getElementById('streamArea');
         const streamVideo = document.getElementById('streamVideo');
         const chatArea = document.getElementById('chatArea');
-        let isStreamMuted = false;
 
         const wsUrl = `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}`;
         ws = new WebSocket(wsUrl);
@@ -377,6 +432,10 @@
                 ws.send(JSON.stringify({ type: 'join', username }));
                 document.getElementById('login').style.display = 'none';
                 document.getElementById('app').style.display = 'flex';
+                // Mikrofon ve medya izinlerini kontrol et
+                navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+                    .then(() => console.log('Medya izinleri alındı'))
+                    .catch(err => console.error('Medya izinleri alınamadı:', err));
             } else {
                 alert('Lütfen bir kullanıcı adı gir!');
             }
@@ -436,7 +495,8 @@
                     audio: {
                         deviceId: audioInputDevice ? { exact: audioInputDevice } : undefined,
                         noiseSuppression: noiseSuppression,
-                        echoCancellation: true
+                        echoCancellation: true,
+                        autoGainControl: true
                     }
                 });
                 console.log('Ses akışı başlatıldı:', localStream.getTracks());
@@ -461,6 +521,7 @@
                 });
             } catch (error) {
                 console.error('Ses hatası:', error);
+                alert('Mikrofon erişiminde bir hata oluştu. Lütfen cihaz izinlerini kontrol edin.');
             }
         }
 
@@ -502,6 +563,7 @@
                 });
             } catch (error) {
                 console.error('Yayın hatası:', error);
+                alert('Ekran paylaşımı başlatılamadı. Lütfen izinleri kontrol edin.');
             }
         }
 
@@ -587,7 +649,18 @@
                     ${user.username}
                     <span class="status-icon ${user.audio ? 'mic-on' : 'mic-off'}">🎤</span>
                     ${user.stream ? `<span class="stream-icon" onclick="requestStream(${user.id}, '${user.username}')">▶️</span>` : ''}
+                    <div class="user-options" id="options-${user.id}">
+                        <button onclick="muteUser(${user.id})">${mutedUsers.has(user.id) ? 'Sesi Aç' : 'Mutele'}</button>
+                        <button onclick="showVolumeControl(${user.id})">Ses Seviyesini Ayarla</button>
+                        <button onclick="requestStream(${user.id}, '${user.username}')">Yayını İzle</button>
+                        <input type="range" id="volume-${user.id}" min="0" max="1" step="0.1" value="1" oninput="setVolume(${user.id})">
+                    </div>
                 `;
+                div.onclick = (e) => {
+                    if (e.target.className.includes('stream-icon')) return; // Stream ikonuna tıklanırsa popup açılmasın
+                    const options = document.getElementById(`options-${user.id}`);
+                    options.style.display = options.style.display === 'block' ? 'none' : 'block';
+                };
                 userList.appendChild(div);
             });
             console.log('Kullanıcı listesi güncellendi:', users);
@@ -621,7 +694,6 @@
                         streamVideo.srcObject = event.streams[0];
                         streamArea.style.display = 'block';
                         chatArea.classList.add('stream-active');
-                        streamVideo.onclick = toggleFullscreen;
                     }
                 };
 
@@ -673,7 +745,6 @@
                     streamVideo.srcObject = event.streams[0];
                     streamArea.style.display = 'block';
                     chatArea.classList.add('stream-active');
-                    streamVideo.onclick = toggleFullscreen;
                 };
 
                 pc.oniceconnectionstatechange = () => {
@@ -739,6 +810,34 @@
                 streamArea.classList.remove('fullscreen');
                 document.exitFullscreen();
             }
+        }
+
+        function toggleStreamMute() {
+            isStreamMuted = !isStreamMuted;
+            streamVideo.muted = isStreamMuted;
+            const muteIcon = document.querySelector('.stream-controls .stream-control-icon:first-child');
+            muteIcon.textContent = isStreamMuted ? '🔇' : '🔊';
+        }
+
+        function muteUser(targetId) {
+            if (mutedUsers.has(targetId)) {
+                mutedUsers.delete(targetId);
+            } else {
+                mutedUsers.add(targetId);
+            }
+            ws.send(JSON.stringify({ type: 'muteUser', targetId, muted: mutedUsers.has(targetId) }));
+            const muteButton = document.querySelector(`#options-${targetId} button:first-child`);
+            muteButton.textContent = mutedUsers.has(targetId) ? 'Sesi Aç' : 'Mutele';
+        }
+
+        function showVolumeControl(targetId) {
+            const volumeSlider = document.getElementById(`volume-${targetId}`);
+            volumeSlider.style.display = 'block';
+        }
+
+        function setVolume(targetId) {
+            const volume = document.getElementById(`volume-${targetId}`).value;
+            ws.send(JSON.stringify({ type: 'volumeChange', targetId, volume: parseFloat(volume) }));
         }
 
         function sendChatMessage() {
