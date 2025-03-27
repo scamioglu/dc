@@ -2,6 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sesli Sohbet ve Ekran Paylaşımı</title>
     <style>
         body {
@@ -24,7 +25,9 @@
             background: rgba(0, 0, 0, 0.8);
             border-radius: 10px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
         #main {
             flex: 1;
@@ -89,6 +92,10 @@
         .chat-message .timestamp {
             font-size: 0.8em;
             color: #ccc;
+        }
+        #userList {
+            flex: 1;
+            overflow-y: auto;
         }
         #userList div {
             margin: 10px 0;
@@ -167,23 +174,21 @@
             font-size: 20px;
         }
         .control-icons {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
             display: flex;
             gap: 10px;
+            padding: 10px 0;
         }
         .control-icon {
             font-size: 24px;
             color: #fff;
             cursor: pointer;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(255, 255, 255, 0.1);
             padding: 10px;
             border-radius: 50%;
             transition: background 0.3s;
         }
         .control-icon:hover {
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(255, 255, 255, 0.3);
         }
         .popup {
             display: none;
@@ -196,6 +201,7 @@
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
             z-index: 1000;
             color: #fff;
+            width: 260px;
         }
         .popup select, .popup input {
             width: 100%;
@@ -228,14 +234,9 @@
     </div>
     <div class="container" id="app" style="display: none;">
         <div id="sidebar">
-            <h3>Kullanıcılar</h3>
-            <div id="userList"></div>
-        </div>
-        <div id="main">
-            <div id="chatArea"></div>
-            <div id="chatInputArea">
-                <input type="text" id="chatInput" placeholder="Mesajınızı yazın..." onkeypress="if(event.key === 'Enter') sendChatMessage()">
-                <button id="chatSendBtn" onclick="sendChatMessage()">Gönder</button>
+            <div>
+                <h3>Kullanıcılar</h3>
+                <div id="userList"></div>
             </div>
             <div class="control-icons">
                 <span class="control-icon" onclick="toggleAudioPopup()">🎤</span>
@@ -278,6 +279,13 @@
                 <button onclick="applyStreamSettings()">Yayını Başlat</button>
             </div>
         </div>
+        <div id="main">
+            <div id="chatArea"></div>
+            <div id="chatInputArea">
+                <input type="text" id="chatInput" placeholder="Mesajınızı yazın..." onkeypress="if(event.key === 'Enter') sendChatMessage()">
+                <button id="chatSendBtn" onclick="sendChatMessage()">Gönder</button>
+            </div>
+        </div>
     </div>
     <div id="streamModal">
         <span class="modal-close" onclick="closeModal()">X</span>
@@ -299,10 +307,22 @@
         const configuration = {
             iceServers: [
                 { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' },
+                { urls: 'stun:stun2.l.google.com:19302' },
                 {
                     urls: 'turn:turn.anyfirewall.com:443?transport=tcp',
                     username: 'webrtc',
                     credential: 'webrtc'
+                },
+                {
+                    urls: 'turn:openrelay.metered.ca:80',
+                    username: 'openrelayproject',
+                    credential: 'openrelayproject'
+                },
+                {
+                    urls: 'turn:openrelay.metered.ca:443',
+                    username: 'openrelayproject',
+                    credential: 'openrelayproject'
                 }
             ]
         };
@@ -394,7 +414,7 @@
                 document.getElementById('audioPopup').style.display = 'none';
 
                 if (streamVideo.srcObject) {
-                    streamVideo.setSinkId(audioOutputDevice);
+                    streamVideo.setSinkId(audioOutputDevice).catch(err => console.error('Çıkış cihazı ayarlama hatası:', err));
                 }
             } catch (error) {
                 console.error('Ses hatası:', error);
@@ -452,6 +472,8 @@
             } else if (data.type === 'requestStream') {
                 if (localStream && localStream.getVideoTracks().length && localStream.getVideoTracks()[0].enabled) {
                     createOffer(data.from);
+                } else {
+                    console.log('Yayın akışı mevcut değil veya kapalı.');
                 }
             } else if (data.type === 'muteUser' && data.targetId === myId) {
                 if (localStream && localStream.getAudioTracks().length) {
@@ -503,19 +525,27 @@
                 pc.onicecandidate = (event) => {
                     if (event.candidate) {
                         ws.send(JSON.stringify({ type: 'candidate', candidate: event.candidate, to }));
-                        console.log('ICE candidate gönderildi:', to);
+                        console.log('ICE candidate gönderildi:', to, event.candidate);
                     }
                 };
 
                 pc.ontrack = (event) => {
-                    console.log('Yeni track alındı:', to, event.streams[0].getTracks());
+                    console.log(`Yeni track alındı (${to}):`, event.streams[0].getTracks());
                     if (streamPeerConnection === pc) {
                         streamVideo.srcObject = event.streams[0];
+                        streamModal.style.display = 'block';
                     }
                 };
 
                 pc.oniceconnectionstatechange = () => {
                     console.log(`ICE connection state (${to}):`, pc.iceConnectionState);
+                    if (pc.iceConnectionState === 'failed') {
+                        console.error('ICE bağlantısı başarısız oldu:', to);
+                    }
+                };
+
+                pc.onicegatheringstatechange = () => {
+                    console.log(`ICE gathering state (${to}):`, pc.iceGatheringState);
                 };
 
                 const offer = await pc.createOffer();
@@ -539,18 +569,25 @@
                 pc.onicecandidate = (event) => {
                     if (event.candidate) {
                         ws.send(JSON.stringify({ type: 'candidate', candidate: event.candidate, to: from }));
-                        console.log('ICE candidate gönderildi:', from);
+                        console.log('ICE candidate gönderildi:', from, event.candidate);
                     }
                 };
 
                 pc.ontrack = (event) => {
-                    console.log('Yeni track alındı:', from, event.streams[0].getTracks());
+                    console.log(`Yeni track alındı (${from}):`, event.streams[0].getTracks());
                     streamVideo.srcObject = event.streams[0];
                     streamModal.style.display = 'block';
                 };
 
                 pc.oniceconnectionstatechange = () => {
                     console.log(`ICE connection state (${from}):`, pc.iceConnectionState);
+                    if (pc.iceConnectionState === 'failed') {
+                        console.error('ICE bağlantısı başarısız oldu:', from);
+                    }
+                };
+
+                pc.onicegatheringstatechange = () => {
+                    console.log(`ICE gathering state (${from}):`, pc.iceGatheringState);
                 };
             } catch (error) {
                 console.error('Offer işleme hatası:', error);
