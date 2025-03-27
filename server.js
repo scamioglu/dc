@@ -42,7 +42,9 @@ wss.on('connection', (ws) => {
             } else if (data.type === 'volumeChange') {
                 broadcast({ type: 'volumeChange', targetId: data.targetId, volume: data.volume });
             } else if (data.type === 'chatMessage') {
-                broadcast({ type: 'chatMessage', username: data.username, message: data.message, timestamp: new Date().toLocaleTimeString() });
+                const now = new Date();
+                const timestamp = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+                broadcast({ type: 'chatMessage', username: data.username, message: data.message, timestamp });
             }
         } catch (error) {
             console.error('Mesaj işleme hatası:', error);
