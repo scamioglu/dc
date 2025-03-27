@@ -219,11 +219,6 @@
         .mic-off { background-color: #ff4444; }
         .screen-on { background-color: #4CAF50; }
         .screen-off { background-color: #ff4444; }
-        .stream-icon {
-            cursor: pointer;
-            color: #4CAF50;
-            font-size: 20px;
-        }
         .control-icons {
             display: flex;
             gap: 10px;
@@ -237,6 +232,9 @@
             padding: 10px;
             border-radius: 50%;
             transition: background 0.3s;
+        }
+        .control-icon.active {
+            background: #4CAF50;
         }
         .control-icon:hover {
             background: rgba(255, 255, 255, 0.3);
@@ -280,29 +278,34 @@
             position: absolute;
             top: 50px;
             left: 0;
-            background: rgba(0, 0, 0, 0.9);
+            background: rgba(0, 0, 0, 0.95);
             padding: 10px;
-            border-radius: 5px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
             z-index: 1000;
             width: 200px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
-        .user-options button {
-            width: 100%;
+        .user-options .option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
             padding: 8px;
             margin: 5px 0;
-            background: #4CAF50;
-            color: white;
-            border: none;
+            background: rgba(255, 255, 255, 0.1);
             border-radius: 5px;
             cursor: pointer;
             transition: background 0.3s;
         }
-        .user-options button:hover {
-            background: #45a049;
+        .user-options .option:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .user-options .option span {
+            font-size: 18px;
         }
         .user-options input[type="range"] {
             width: 100%;
+            margin: 5px 0;
         }
     </style>
 </head>
@@ -319,8 +322,8 @@
                 <div id="userList"></div>
             </div>
             <div class="control-icons">
-                <span class="control-icon" onclick="toggleAudioPopup()">🎤</span>
-                <span class="control-icon" onclick="toggleStreamPopup()">🖥️</span>
+                <span id="audioIcon" class="control-icon" onclick="toggleAudio()">🎤</span>
+                <span id="streamIcon" class="control-icon" onclick="toggleStream()">🖥️</span>
             </div>
             <div id="audioPopup" class="popup">
                 <h4>Ses Ayarları</h4>
@@ -384,6 +387,8 @@
         let usernameColors = {};
         let pendingOffers = new Map();
         let isStreamMuted = false;
+        let isAudioActive = false;
+        let isStreamActive = false;
         const configuration = {
             iceServers: [
                 { urls: 'stun:stun.l.google.com:19302' },
@@ -391,21 +396,6 @@
                 { urls: 'stun:stun2.l.google.com:19302' },
                 { urls: 'stun:stun3.l.google.com:19302' },
                 { urls: 'stun:stun4.l.google.com:19302' },
-                {
-                    urls: 'turn:turn.anyfirewall.com:443?transport=tcp',
-                    username: 'webrtc',
-                    credential: 'webrtc'
-                },
-                {
-                    urls: 'turn:openrelay.metered.ca:80',
-                    username: 'openrelayproject',
-                    credential: 'openrelayproject'
-                },
-                {
-                    urls: 'turn:openrelay.metered.ca:443',
-                    username: 'openrelayproject',
-                    credential: 'openrelayproject'
-                },
                 {
                     urls: 'turn:relay1.expressturn.com:3478',
                     username: 'efW5J7X8J9K2L3',
@@ -418,6 +408,8 @@
         const streamArea = document.getElementById('streamArea');
         const streamVideo = document.getElementById('streamVideo');
         const chatArea = document.getElementById('chatArea');
+        const audioIcon = document.getElementById('audioIcon');
+        const streamIcon = document.getElementById('streamIcon');
 
         const wsUrl = `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}`;
         ws = new WebSocket(wsUrl);
@@ -432,10 +424,10 @@
                 ws.send(JSON.stringify({ type: 'join', username }));
                 document.getElementById('login').style.display = 'none';
                 document.getElementById('app').style.display = 'flex';
-                // Mikrofon ve medya izinlerini kontrol et
+                // Medya izinlerini kontrol et
                 navigator.mediaDevices.getUserMedia({ audio: true, video: false })
-                    .then(() => console.log('Medya izinleri alındı'))
-                    .catch(err => console.error('Medya izinleri alınamadı:', err));
+                    .then(() => console.log('Mikrofon izinleri alındı'))
+                    .catch(err => console.error('Mikrofon izinleri alınamadı:', err));
             } else {
                 alert('Lütfen bir kullanıcı adı gir!');
             }
@@ -447,6 +439,38 @@
                 usernameColors[username] = colors[Object.keys(usernameColors).length % colors.length];
             }
             return usernameColors[username];
+        }
+
+        async function toggleAudio() {
+            if (isAudioActive) {
+                // Ses akışını kapat
+                if (localStream) {
+                    localStream.getAudioTracks().forEach(track => track.stop());
+                    localStream = null;
+                }
+                ws.send(JSON.stringify({ type: 'toggleAudio', id: myId, state: false }));
+                isAudioActive = false;
+                audioIcon.classList.remove('active');
+            } else {
+                // Ses ayarları popup'ını aç
+                toggleAudioPopup();
+            }
+        }
+
+        async function toggleStream() {
+            if (isStreamActive) {
+                // Yayın akışını kapat
+                if (localStream) {
+                    localStream.getVideoTracks().forEach(track => track.stop());
+                    localStream = null;
+                }
+                ws.send(JSON.stringify({ type: 'toggleStream', id: myId, state: false }));
+                isStreamActive = false;
+                streamIcon.classList.remove('active');
+            } else {
+                // Yayın ayarları popup'ını aç
+                toggleStreamPopup();
+            }
         }
 
         async function toggleAudioPopup() {
@@ -463,23 +487,28 @@
         }
 
         async function populateAudioDevices() {
-            const devices = await navigator.mediaDevices.enumerateDevices();
-            const audioInputSelect = document.getElementById('audioInputDevice');
-            const audioOutputSelect = document.getElementById('audioOutputDevice');
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const audioInputSelect = document.getElementById('audioInputDevice');
+                const audioOutputSelect = document.getElementById('audioOutputDevice');
 
-            audioInputSelect.innerHTML = '';
-            audioOutputSelect.innerHTML = '';
+                audioInputSelect.innerHTML = '';
+                audioOutputSelect.innerHTML = '';
 
-            devices.forEach(device => {
-                const option = document.createElement('option');
-                option.value = device.deviceId;
-                option.text = device.label || `Cihaz ${device.deviceId}`;
-                if (device.kind === 'audioinput') {
-                    audioInputSelect.appendChild(option);
-                } else if (device.kind === 'audiooutput') {
-                    audioOutputSelect.appendChild(option);
-                }
-            });
+                devices.forEach(device => {
+                    const option = document.createElement('option');
+                    option.value = device.deviceId;
+                    option.text = device.label || `Cihaz ${device.deviceId}`;
+                    if (device.kind === 'audioinput') {
+                        audioInputSelect.appendChild(option);
+                    } else if (device.kind === 'audiooutput') {
+                        audioOutputSelect.appendChild(option);
+                    }
+                });
+            } catch (error) {
+                console.error('Cihaz listesi alınamadı:', error);
+                alert('Cihaz listesi alınamadı. Lütfen tarayıcı izinlerini kontrol edin.');
+            }
         }
 
         async function applyAudioSettings() {
@@ -502,6 +531,8 @@
                 console.log('Ses akışı başlatıldı:', localStream.getTracks());
                 ws.send(JSON.stringify({ type: 'toggleAudio', id: myId, state: true }));
                 document.getElementById('audioPopup').style.display = 'none';
+                isAudioActive = true;
+                audioIcon.classList.add('active');
 
                 if (streamVideo.srcObject) {
                     streamVideo.setSinkId(audioOutputDevice).catch(err => console.error('Çıkış cihazı ayarlama hatası:', err));
@@ -521,7 +552,7 @@
                 });
             } catch (error) {
                 console.error('Ses hatası:', error);
-                alert('Mikrofon erişiminde bir hata oluştu. Lütfen cihaz izinlerini kontrol edin.');
+                alert('Mikrofon erişiminde bir hata oluştu. Lütfen cihaz izinlerini kontrol edin ve tarayıcınızın mikrofon erişimine izin verdiğinden emin olun.');
             }
         }
 
@@ -548,6 +579,8 @@
                 console.log('Yayın akışı başlatıldı:', localStream.getTracks());
                 ws.send(JSON.stringify({ type: 'toggleStream', id: myId, state: true }));
                 document.getElementById('streamPopup').style.display = 'none';
+                isStreamActive = true;
+                streamIcon.classList.add('active');
 
                 peerConnections.forEach((pc, peerId) => {
                     if (pc.signalingState === 'stable') {
@@ -563,7 +596,7 @@
                 });
             } catch (error) {
                 console.error('Yayın hatası:', error);
-                alert('Ekran paylaşımı başlatılamadı. Lütfen izinleri kontrol edin.');
+                alert('Ekran paylaşımı başlatılamadı. Lütfen tarayıcınızın ekran paylaşımına izin verdiğinden emin olun. Not: iOS Safari ekran paylaşımını desteklemez, lütfen Chrome kullanmayı deneyin.');
             }
         }
 
@@ -648,16 +681,21 @@
                 div.innerHTML = `
                     ${user.username}
                     <span class="status-icon ${user.audio ? 'mic-on' : 'mic-off'}">🎤</span>
-                    ${user.stream ? `<span class="stream-icon" onclick="requestStream(${user.id}, '${user.username}')">▶️</span>` : ''}
+                    <span class="status-icon ${user.stream ? 'screen-on' : 'screen-off'}">🖥️</span>
                     <div class="user-options" id="options-${user.id}">
-                        <button onclick="muteUser(${user.id})">${mutedUsers.has(user.id) ? 'Sesi Aç' : 'Mutele'}</button>
-                        <button onclick="showVolumeControl(${user.id})">Ses Seviyesini Ayarla</button>
-                        <button onclick="requestStream(${user.id}, '${user.username}')">Yayını İzle</button>
-                        <input type="range" id="volume-${user.id}" min="0" max="1" step="0.1" value="1" oninput="setVolume(${user.id})">
+                        <div class="option" onclick="muteUser(${user.id})">
+                            <span>${mutedUsers.has(user.id) ? '🔊' : '🔇'}</span>
+                        </div>
+                        <div class="option" onclick="document.getElementById('volume-${user.id}').style.display = 'block'">
+                            <span>🔈</span>
+                        </div>
+                        <input type="range" id="volume-${user.id}" min="0" max="1" step="0.1" value="1" oninput="setVolume(${user.id})" style="display: none;">
+                        <div class="option" onclick="requestStream(${user.id}, '${user.username}')">
+                            <span>▶️</span>
+                        </div>
                     </div>
                 `;
                 div.onclick = (e) => {
-                    if (e.target.className.includes('stream-icon')) return; // Stream ikonuna tıklanırsa popup açılmasın
                     const options = document.getElementById(`options-${user.id}`);
                     options.style.display = options.style.display === 'block' ? 'none' : 'block';
                 };
@@ -826,13 +864,6 @@
                 mutedUsers.add(targetId);
             }
             ws.send(JSON.stringify({ type: 'muteUser', targetId, muted: mutedUsers.has(targetId) }));
-            const muteButton = document.querySelector(`#options-${targetId} button:first-child`);
-            muteButton.textContent = mutedUsers.has(targetId) ? 'Sesi Aç' : 'Mutele';
-        }
-
-        function showVolumeControl(targetId) {
-            const volumeSlider = document.getElementById(`volume-${targetId}`);
-            volumeSlider.style.display = 'block';
         }
 
         function setVolume(targetId) {
@@ -891,6 +922,10 @@
             ws.send(JSON.stringify({ type: 'toggleStream', id: myId, state: false }));
             streamArea.style.display = 'none';
             chatArea.classList.remove('stream-active');
+            isAudioActive = false;
+            isStreamActive = false;
+            audioIcon.classList.remove('active');
+            streamIcon.classList.remove('active');
         }
     </script>
 </body>
