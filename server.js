@@ -41,6 +41,8 @@ wss.on('connection', (ws) => {
                 broadcast({ type: 'muteUser', targetId: data.targetId, muted: data.muted });
             } else if (data.type === 'volumeChange') {
                 broadcast({ type: 'volumeChange', targetId: data.targetId, volume: data.volume });
+            } else if (data.type === 'chatMessage') {
+                broadcast({ type: 'chatMessage', username: data.username, message: data.message, timestamp: new Date().toLocaleTimeString() });
             }
         } catch (error) {
             console.error('Mesaj işleme hatası:', error);
