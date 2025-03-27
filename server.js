@@ -45,6 +45,10 @@ wss.on('connection', (ws) => {
                 const now = new Date();
                 const timestamp = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
                 broadcast({ type: 'chatMessage', username: data.username, message: data.message, timestamp });
+            } else if (data.type === 'fileMessage') {
+                const now = new Date();
+                const timestamp = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+                broadcast({ type: 'fileMessage', username: data.username, fileName: data.fileName, fileData: data.fileData, fileType: data.fileType, timestamp });
             }
         } catch (error) {
             console.error('Mesaj işleme hatası:', error);
