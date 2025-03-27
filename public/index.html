@@ -4,36 +4,200 @@
     <meta charset="UTF-8">
     <title>Sesli Sohbet ve Ekran Paylaşımı</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f0f0f0; }
-        .container { display: flex; max-width: 1200px; margin: 0 auto; }
-        #sidebar { width: 250px; padding: 10px; background: #fff; border-radius: 5px; }
-        #main { flex: 1; padding: 0 20px; }
-        video { width: 100%; max-width: 600px; background-color: black; margin: 10px 0; }
-        button { padding: 8px 16px; margin: 5px; color: white; border: none; cursor: pointer; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: url('https://i.ibb.co/5vYvYvY/background.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: #fff;
+        }
+        .container {
+            display: flex;
+            max-width: 1400px;
+            margin: 20px auto;
+            height: calc(100vh - 40px);
+        }
+        #sidebar {
+            width: 300px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            overflow-y: auto;
+        }
+        #main {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #chatArea {
+            width: 100%;
+            max-width: 800px;
+            height: 60vh;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            overflow-y: auto;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(5px);
+        }
+        #chatInputArea {
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            margin-top: 10px;
+        }
+        #chatInput {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 5px 0 0 5px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+        }
+        #chatSendBtn {
+            padding: 10px 20px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 0 5px 5px 0;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        #chatSendBtn:hover {
+            background: #45a049;
+        }
+        .chat-message {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .chat-message span {
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        video {
+            width: 100%;
+            max-width: 400px;
+            background-color: black;
+            margin: 10px 0;
+            border-radius: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
         .inactive { background-color: #ff4444; }
         .active { background-color: #4CAF50; }
         button:hover { filter: brightness(90%); }
-        #controls { margin: 20px 0; }
-        #userList div { margin: 5px 0; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
-        #login { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        input { padding: 5px; margin: 5px; width: 200px; }
+        #controls {
+            margin: 20px 0;
+            display: flex;
+            gap: 10px;
+        }
+        #userList div {
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: background 0.3s;
+        }
+        #userList div:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        #login {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+        input {
+            padding: 10px;
+            margin: 10px;
+            width: 200px;
+            border: none;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+        }
         .video-container { position: relative; }
-        .fullscreen-btn { position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.7); }
-        .status-icon { display: inline-block; width: 20px; height: 20px; margin: 0 5px; text-align: center; line-height: 20px; border-radius: 50%; }
+        .fullscreen-btn {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 5px;
+        }
+        .status-icon {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            margin: 0 5px;
+            text-align: center;
+            line-height: 20px;
+            border-radius: 50%;
+        }
         .mic-on { background-color: #4CAF50; }
         .mic-off { background-color: #ff4444; }
         .screen-on { background-color: #4CAF50; }
         .screen-off { background-color: #ff4444; }
-        #streamModal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.1); z-index: 1000; }
-        #streamModal video { width: 500px; height: auto; }
-        .modal-close { position: absolute; top: 10px; right: 10px; cursor: pointer; }
+        .stream-icon {
+            cursor: pointer;
+            color: #4CAF50;
+            font-size: 20px;
+        }
+        #streamModal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+        }
+        #streamModal video {
+            width: 600px;
+            height: auto;
+            border-radius: 10px;
+        }
+        .modal-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+            color: #fff;
+            font-size: 20px;
+        }
+        h1, h3 {
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
     </style>
 </head>
 <body>
     <div id="login">
         <h2>Kullanıcı Adı Gir</h2>
         <input type="text" id="username" placeholder="Kullanıcı adın" required>
-        <button onclick="join()">Katıl</button>
+        <button onclick="join()" style="background: #4CAF50;">Katıl</button>
     </div>
     <div class="container" id="app" style="display: none;">
         <div id="sidebar">
@@ -50,7 +214,11 @@
             <div class="video-container">
                 <video id="localVideo" autoplay playsinline muted></video>
             </div>
-            <div id="remoteVideos"></div>
+            <div id="chatArea"></div>
+            <div id="chatInputArea">
+                <input type="text" id="chatInput" placeholder="Mesajınızı yazın..." onkeypress="if(event.key === 'Enter') sendChatMessage()">
+                <button id="chatSendBtn" onclick="sendChatMessage()">Gönder</button>
+            </div>
         </div>
     </div>
     <div id="streamModal">
@@ -81,13 +249,13 @@
         };
 
         const localVideo = document.getElementById('localVideo');
-        const remoteVideos = document.getElementById('remoteVideos');
         const userList = document.getElementById('userList');
         const audioBtn = document.getElementById('audioBtn');
         const streamBtn = document.getElementById('streamBtn');
         const streamModal = document.getElementById('streamModal');
         const streamVideo = document.getElementById('streamVideo');
         const muteStreamBtn = document.getElementById('muteStreamBtn');
+        const chatArea = document.getElementById('chatArea');
         let isStreamMuted = false;
 
         const wsUrl = `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}`;
@@ -128,14 +296,14 @@
         async function toggleStream() {
             try {
                 if (!localStream || !localStream.getVideoTracks().length) {
-                    const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+                    const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
                     if (localStream) {
-                        localStream.addTrack(screenStream.getVideoTracks()[0]);
+                        screenStream.getTracks().forEach(track => localStream.addTrack(track));
                     } else {
                         localStream = screenStream;
                     }
                     localVideo.srcObject = localStream;
-                    console.log('Yayın akışı başlatıldı:', localStream.getVideoTracks());
+                    console.log('Yayın akışı başlatıldı:', localStream.getTracks());
                 }
                 const enabled = !localStream.getVideoTracks()[0].enabled;
                 localStream.getVideoTracks()[0].enabled = enabled;
@@ -145,23 +313,6 @@
             } catch (error) {
                 console.error('Yayın hatası:', error);
             }
-        }
-
-        function showUserOptions(userId, username) {
-            const options = `
-                <div style="margin: 5px 0;">
-                    <button onclick="muteUser(${userId})">Mutele</button>
-                    <button onclick="showVolumeControl(${userId})">Ses Seviyesini Ayarla</button>
-                    <button onclick="requestStream(${userId}, '${username}')">Yayını İzle</button>
-                </div>
-            `;
-            const div = document.querySelector(`#userList div[data-id="${userId}"]`);
-            div.innerHTML = `
-                ${username}
-                <span class="status-icon ${clients.get(userId)?.audio ? 'mic-on' : 'mic-off'}">🎤</span>
-                <span class="status-icon ${clients.get(userId)?.stream ? 'screen-on' : 'screen-off'}">🖥️</span>
-                ${options}
-            `;
         }
 
         function handleSignaling(event) {
@@ -191,6 +342,12 @@
                 if (streamVideo.srcObject) {
                     streamVideo.volume = data.volume;
                 }
+            } else if (data.type === 'chatMessage') {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'chat-message';
+                messageDiv.innerHTML = `<span>${data.username}</span> (${data.timestamp}): ${data.message}`;
+                chatArea.appendChild(messageDiv);
+                chatArea.scrollTop = chatArea.scrollHeight;
             }
         }
 
@@ -199,11 +356,10 @@
             users.forEach(user => {
                 const div = document.createElement('div');
                 div.dataset.id = user.id;
-                div.onclick = () => showUserOptions(user.id, user.username);
                 div.innerHTML = `
                     ${user.username}
                     <span class="status-icon ${user.audio ? 'mic-on' : 'mic-off'}">🎤</span>
-                    <span class="status-icon ${user.stream ? 'screen-on' : 'screen-off'}">🖥️</span>
+                    ${user.stream ? `<span class="stream-icon" onclick="requestStream(${user.id}, '${user.username}')">▶️</span>` : ''}
                 `;
                 userList.appendChild(div);
             });
@@ -214,7 +370,10 @@
             try {
                 const pc = new RTCPeerConnection(configuration);
                 peerConnections.set(to, pc);
-                localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+                localStream.getTracks().forEach(track => {
+                    pc.addTrack(track, localStream);
+                    console.log(`Track eklendi (${to}):`, track);
+                });
 
                 pc.onicecandidate = (event) => {
                     if (event.candidate) {
@@ -295,25 +454,6 @@
             }
         }
 
-        function muteUser(targetId) {
-            if (mutedUsers.has(targetId)) {
-                mutedUsers.delete(targetId);
-            } else {
-                mutedUsers.add(targetId);
-            }
-            ws.send(JSON.stringify({ type: 'muteUser', targetId, muted: mutedUsers.has(targetId) }));
-        }
-
-        function showVolumeControl(targetId) {
-            const volume = prompt('Ses seviyesini girin (0.0 - 1.0):', '1.0');
-            const parsedVolume = parseFloat(volume);
-            if (!isNaN(parsedVolume) && parsedVolume >= 0 && parsedVolume <= 1) {
-                ws.send(JSON.stringify({ type: 'volumeChange', targetId, volume: parsedVolume }));
-            } else {
-                alert('Geçersiz ses seviyesi!');
-            }
-        }
-
         function requestStream(targetId, username) {
             streamPeerConnection = null;
             streamVideo.srcObject = null;
@@ -341,11 +481,18 @@
             streamVideo.srcObject = null;
         }
 
+        function sendChatMessage() {
+            const message = document.getElementById('chatInput').value.trim();
+            if (message) {
+                ws.send(JSON.stringify({ type: 'chatMessage', username: document.getElementById('username').value, message }));
+                document.getElementById('chatInput').value = '';
+            }
+        }
+
         function stopStreams() {
             if (localStream) {
                 localStream.getTracks().forEach(track => track.stop());
                 localVideo.srcObject = null;
-                remoteVideos.innerHTML = '';
                 localStream = null;
             }
             peerConnections.forEach(pc => pc.close());
