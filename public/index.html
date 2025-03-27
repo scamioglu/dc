@@ -32,11 +32,12 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            position: relative;
         }
         #chatArea {
             width: 100%;
             max-width: 800px;
-            height: 60vh;
+            height: 80vh;
             background: rgba(255, 255, 255, 0.1);
             border-radius: 10px;
             padding: 20px;
@@ -75,34 +76,19 @@
             padding: 10px;
             border-radius: 5px;
             background: rgba(255, 255, 255, 0.2);
-        }
-        .chat-message span {
-            font-weight: bold;
-            color: #4CAF50;
-        }
-        video {
-            width: 100%;
-            max-width: 400px;
-            background-color: black;
-            margin: 10px 0;
-            border-radius: 10px;
-        }
-        button {
-            padding: 10px 20px;
-            margin: 5px;
-            color: white;
-            border: none;
-            cursor: pointer;
-            border-radius: 5px;
-            transition: background 0.3s;
-        }
-        .inactive { background-color: #ff4444; }
-        .active { background-color: #4CAF50; }
-        button:hover { filter: brightness(90%); }
-        #controls {
-            margin: 20px 0;
             display: flex;
-            gap: 10px;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .chat-message .username {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .chat-message .timestamp {
+            font-size: 0.8em;
+            color: #ccc;
         }
         #userList div {
             margin: 10px 0;
@@ -136,14 +122,6 @@
             border-radius: 5px;
             background: rgba(255, 255, 255, 0.9);
             color: #333;
-        }
-        .video-container { position: relative; }
-        .fullscreen-btn {
-            position: absolute;
-            bottom: 10px;
-            right: 10px;
-            background: rgba(0, 0, 0, 0.7);
-            border-radius: 5px;
         }
         .status-icon {
             display: inline-block;
@@ -188,8 +166,57 @@
             color: #fff;
             font-size: 20px;
         }
-        h1, h3 {
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        .control-icons {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        .control-icon {
+            font-size: 24px;
+            color: #fff;
+            cursor: pointer;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 50%;
+            transition: background 0.3s;
+        }
+        .control-icon:hover {
+            background: rgba(0, 0, 0, 0.8);
+        }
+        .popup {
+            display: none;
+            position: absolute;
+            bottom: 60px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            color: #fff;
+        }
+        .popup select, .popup input {
+            width: 100%;
+            padding: 5px;
+            margin: 5px 0;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+        }
+        .popup button {
+            width: 100%;
+            padding: 10px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .popup button:hover {
+            background: #45a049;
         }
     </style>
 </head>
@@ -205,19 +232,50 @@
             <div id="userList"></div>
         </div>
         <div id="main">
-            <h1>Sesli Sohbet ve Ekran Paylaşımı</h1>
-            <div id="controls">
-                <button id="audioBtn" class="inactive" onclick="toggleAudio()">Ses: <span id="audioState">Kapalı</span></button>
-                <button id="streamBtn" class="inactive" onclick="toggleStream()">Yayın: <span id="streamState">Kapalı</span></button>
-                <button id="stopBtn" class="inactive" onclick="stopStreams()">Durdur</button>
-            </div>
-            <div class="video-container">
-                <video id="localVideo" autoplay playsinline muted></video>
-            </div>
             <div id="chatArea"></div>
             <div id="chatInputArea">
                 <input type="text" id="chatInput" placeholder="Mesajınızı yazın..." onkeypress="if(event.key === 'Enter') sendChatMessage()">
                 <button id="chatSendBtn" onclick="sendChatMessage()">Gönder</button>
+            </div>
+            <div class="control-icons">
+                <span class="control-icon" onclick="toggleAudioPopup()">🎤</span>
+                <span class="control-icon" onclick="toggleStreamPopup()">🖥️</span>
+            </div>
+            <div id="audioPopup" class="popup">
+                <h4>Ses Ayarları</h4>
+                <label>Giriş Cihazı:</label>
+                <select id="audioInputDevice"></select>
+                <label>Çıkış Cihazı:</label>
+                <select id="audioOutputDevice"></select>
+                <label>Gürültü Engelleme:</label>
+                <input type="checkbox" id="noiseSuppression">
+                <button onclick="applyAudioSettings()">Uygula</button>
+            </div>
+            <div id="streamPopup" class="popup">
+                <h4>Yayın Ayarları</h4>
+                <label>Yayın Türü:</label>
+                <select id="streamType">
+                    <option value="screen">Tam Ekran</option>
+                    <option value="window">Pencere</option>
+                    <option value="tab">Sekme</option>
+                </select>
+                <label>Görüntü Kalitesi:</label>
+                <select id="streamQuality">
+                    <option value="480p">480p</option>
+                    <option value="720p">720p</option>
+                    <option value="1080p">1080p</option>
+                </select>
+                <label>Kare Hızı:</label>
+                <select id="frameRate">
+                    <option value="30">30 FPS</option>
+                    <option value="60">60 FPS</option>
+                </select>
+                <label>Gecikme:</label>
+                <select id="streamDelay">
+                    <option value="0">Delaysız</option>
+                    <option value="2">2 Saniye Gecikmeli (Daha Kaliteli)</option>
+                </select>
+                <button onclick="applyStreamSettings()">Yayını Başlat</button>
             </div>
         </div>
     </div>
@@ -237,6 +295,7 @@
         let myId;
         let mutedUsers = new Set();
         let streamPeerConnection = null;
+        let usernameColors = {};
         const configuration = {
             iceServers: [
                 { urls: 'stun:stun.l.google.com:19302' },
@@ -248,10 +307,7 @@
             ]
         };
 
-        const localVideo = document.getElementById('localVideo');
         const userList = document.getElementById('userList');
-        const audioBtn = document.getElementById('audioBtn');
-        const streamBtn = document.getElementById('streamBtn');
         const streamModal = document.getElementById('streamModal');
         const streamVideo = document.getElementById('streamVideo');
         const muteStreamBtn = document.getElementById('muteStreamBtn');
@@ -276,40 +332,103 @@
             }
         }
 
-        async function toggleAudio() {
-            try {
-                if (!localStream || !localStream.getAudioTracks().length) {
-                    localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    localVideo.srcObject = localStream;
-                    console.log('Ses akışı başlatıldı:', localStream.getAudioTracks());
+        function getRandomColor(username) {
+            if (!usernameColors[username]) {
+                const colors = ['#FF6F61', '#6B5B95', '#88B04B', '#F7CAC9', '#92A8D1', '#955251', '#B565A7'];
+                usernameColors[username] = colors[Object.keys(usernameColors).length % colors.length];
+            }
+            return usernameColors[username];
+        }
+
+        async function toggleAudioPopup() {
+            const popup = document.getElementById('audioPopup');
+            popup.style.display = popup.style.display === 'block' ? 'none' : 'block';
+            if (popup.style.display === 'block') {
+                await populateAudioDevices();
+            }
+        }
+
+        async function toggleStreamPopup() {
+            const popup = document.getElementById('streamPopup');
+            popup.style.display = popup.style.display === 'block' ? 'none' : 'block';
+        }
+
+        async function populateAudioDevices() {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const audioInputSelect = document.getElementById('audioInputDevice');
+            const audioOutputSelect = document.getElementById('audioOutputDevice');
+
+            audioInputSelect.innerHTML = '';
+            audioOutputSelect.innerHTML = '';
+
+            devices.forEach(device => {
+                const option = document.createElement('option');
+                option.value = device.deviceId;
+                option.text = device.label || `Cihaz ${device.deviceId}`;
+                if (device.kind === 'audioinput') {
+                    audioInputSelect.appendChild(option);
+                } else if (device.kind === 'audiooutput') {
+                    audioOutputSelect.appendChild(option);
                 }
-                const enabled = !localStream.getAudioTracks()[0].enabled;
-                localStream.getAudioTracks()[0].enabled = enabled;
-                document.getElementById('audioState').textContent = enabled ? 'Açık' : 'Kapalı';
-                audioBtn.className = enabled ? 'active' : 'inactive';
-                ws.send(JSON.stringify({ type: 'toggleAudio', id: myId, state: enabled }));
+            });
+        }
+
+        async function applyAudioSettings() {
+            const audioInputDevice = document.getElementById('audioInputDevice').value;
+            const audioOutputDevice = document.getElementById('audioOutputDevice').value;
+            const noiseSuppression = document.getElementById('noiseSuppression').checked;
+
+            try {
+                if (localStream) {
+                    localStream.getTracks().forEach(track => track.stop());
+                }
+                localStream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        deviceId: audioInputDevice ? { exact: audioInputDevice } : undefined,
+                        noiseSuppression: noiseSuppression,
+                        echoCancellation: true
+                    }
+                });
+                console.log('Ses akışı başlatıldı:', localStream.getTracks());
+                ws.send(JSON.stringify({ type: 'toggleAudio', id: myId, state: true }));
+                document.getElementById('audioPopup').style.display = 'none';
+
+                if (streamVideo.srcObject) {
+                    streamVideo.setSinkId(audioOutputDevice);
+                }
             } catch (error) {
                 console.error('Ses hatası:', error);
             }
         }
 
-        async function toggleStream() {
+        async function applyStreamSettings() {
+            const streamType = document.getElementById('streamType').value;
+            const streamQuality = document.getElementById('streamQuality').value;
+            const frameRate = parseInt(document.getElementById('frameRate').value);
+            const streamDelay = parseInt(document.getElementById('streamDelay').value);
+
+            const constraints = {
+                video: {
+                    width: streamQuality === '480p' ? 640 : streamQuality === '720p' ? 1280 : 1920,
+                    height: streamQuality === '480p' ? 480 : streamQuality === '720p' ? 720 : 1080,
+                    frameRate: frameRate
+                },
+                audio: true
+            };
+
             try {
-                if (!localStream || !localStream.getVideoTracks().length) {
-                    const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
-                    if (localStream) {
-                        screenStream.getTracks().forEach(track => localStream.addTrack(track));
-                    } else {
-                        localStream = screenStream;
-                    }
-                    localVideo.srcObject = localStream;
-                    console.log('Yayın akışı başlatıldı:', localStream.getTracks());
+                if (localStream) {
+                    localStream.getTracks().forEach(track => track.stop());
                 }
-                const enabled = !localStream.getVideoTracks()[0].enabled;
-                localStream.getVideoTracks()[0].enabled = enabled;
-                document.getElementById('streamState').textContent = enabled ? 'Açık' : 'Kapalı';
-                streamBtn.className = enabled ? 'active' : 'inactive';
-                ws.send(JSON.stringify({ type: 'toggleStream', id: myId, state: enabled }));
+                const screenStream = await navigator.mediaDevices.getDisplayMedia(constraints);
+                if (localStream) {
+                    screenStream.getTracks().forEach(track => localStream.addTrack(track));
+                } else {
+                    localStream = screenStream;
+                }
+                console.log('Yayın akışı başlatıldı:', localStream.getTracks());
+                ws.send(JSON.stringify({ type: 'toggleStream', id: myId, state: true }));
+                document.getElementById('streamPopup').style.display = 'none';
             } catch (error) {
                 console.error('Yayın hatası:', error);
             }
@@ -345,7 +464,13 @@
             } else if (data.type === 'chatMessage') {
                 const messageDiv = document.createElement('div');
                 messageDiv.className = 'chat-message';
-                messageDiv.innerHTML = `<span>${data.username}</span> (${data.timestamp}): ${data.message}`;
+                messageDiv.innerHTML = `
+                    <div>
+                        <span class="username" style="background: ${getRandomColor(data.username)}">${data.username}</span>
+                        ${data.message}
+                    </div>
+                    <span class="timestamp">${data.timestamp}</span>
+                `;
                 chatArea.appendChild(messageDiv);
                 chatArea.scrollTop = chatArea.scrollHeight;
             }
@@ -492,15 +617,10 @@
         function stopStreams() {
             if (localStream) {
                 localStream.getTracks().forEach(track => track.stop());
-                localVideo.srcObject = null;
                 localStream = null;
             }
             peerConnections.forEach(pc => pc.close());
             peerConnections.clear();
-            document.getElementById('audioState').textContent = 'Kapalı';
-            document.getElementById('streamState').textContent = 'Kapalı';
-            audioBtn.className = 'inactive';
-            streamBtn.className = 'inactive';
             ws.send(JSON.stringify({ type: 'toggleAudio', id: myId, state: false }));
             ws.send(JSON.stringify({ type: 'toggleStream', id: myId, state: false }));
             closeModal();
