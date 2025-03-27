@@ -9,19 +9,26 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 0;
-            background: url('https://github.com/scamioglu/dc/blob/a23d3a77d00f6672c3b6c53a874b0c89394ba779/public/background.jpg') no-repeat center center fixed;
             background: #000;
             color: #fff;
+            overflow-x: hidden;
         }
         .container {
             display: flex;
+            flex-direction: column;
             max-width: 1400px;
-            margin: 20px auto;
-            height: calc(100vh - 40px);
+            margin: 10px auto;
+            height: calc(100vh - 20px);
+        }
+        @media (min-width: 768px) {
+            .container {
+                flex-direction: row;
+            }
         }
         #sidebar {
-            width: 300px;
-            padding: 20px;
+            width: 100%;
+            max-width: 300px;
+            padding: 10px;
             background: rgba(0, 0, 0, 0.8);
             border-radius: 10px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
@@ -29,9 +36,14 @@
             flex-direction: column;
             justify-content: space-between;
         }
+        @media (min-width: 768px) {
+            #sidebar {
+                width: 300px;
+            }
+        }
         #main {
             flex: 1;
-            padding: 20px;
+            padding: 10px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -40,29 +52,42 @@
         #chatArea {
             width: 100%;
             max-width: 800px;
-            height: 80vh;
+            height: 50vh;
             background: rgba(255, 255, 255, 0.1);
             border-radius: 10px;
-            padding: 20px;
+            padding: 10px;
             overflow-y: auto;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
             backdrop-filter: blur(5px);
             transition: height 0.3s;
         }
         #chatArea.stream-active {
-            height: 40vh;
+            height: 30vh;
+        }
+        @media (min-width: 768px) {
+            #chatArea {
+                height: 80vh;
+            }
+            #chatArea.stream-active {
+                height: 40vh;
+            }
         }
         #streamArea {
             display: none;
             width: 100%;
             max-width: 800px;
-            height: 40vh;
+            height: 30vh;
             background: rgba(0, 0, 0, 0.9);
             border-radius: 10px;
-            padding: 10px;
-            margin-bottom: 10px;
+            padding: 5px;
+            margin-bottom: 5px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
             position: relative;
+        }
+        @media (min-width: 768px) {
+            #streamArea {
+                height: 40vh;
+            }
         }
         #streamArea video {
             width: 100%;
@@ -81,13 +106,13 @@
         }
         .stream-controls {
             position: absolute;
-            bottom: 10px;
-            right: 10px;
+            bottom: 5px;
+            right: 5px;
             display: flex;
-            gap: 10px;
+            gap: 5px;
         }
         .stream-control-icon {
-            font-size: 20px;
+            font-size: 16px;
             color: #fff;
             cursor: pointer;
             background: rgba(255, 255, 255, 0.1);
@@ -103,19 +128,19 @@
             max-width: 800px;
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin-top: 10px;
+            gap: 5px;
+            margin-top: 5px;
         }
         #chatInput {
             flex: 1;
-            padding: 10px;
+            padding: 8px;
             border: none;
             border-radius: 5px 0 0 5px;
             background: rgba(255, 255, 255, 0.9);
             color: #333;
         }
         #chatSendBtn {
-            padding: 10px 20px;
+            padding: 8px 16px;
             background: #4CAF50;
             color: white;
             border: none;
@@ -127,7 +152,7 @@
             background: #45a049;
         }
         .file-btn {
-            padding: 10px;
+            padding: 8px;
             background: #2196F3;
             color: white;
             border: none;
@@ -139,8 +164,8 @@
             background: #1e88e5;
         }
         .chat-message {
-            margin: 10px 0;
-            padding: 10px;
+            margin: 5px 0;
+            padding: 8px;
             border-radius: 5px;
             background: rgba(255, 255, 255, 0.2);
             display: flex;
@@ -148,18 +173,18 @@
             align-items: center;
         }
         .chat-message .username {
-            padding: 5px 10px;
+            padding: 5px 8px;
             border-radius: 15px;
             font-weight: bold;
-            margin-right: 10px;
+            margin-right: 8px;
         }
         .chat-message .timestamp {
-            font-size: 0.8em;
+            font-size: 0.7em;
             color: #ccc;
         }
         .chat-message img {
-            max-width: 200px;
-            max-height: 200px;
+            max-width: 150px;
+            max-height: 150px;
             border-radius: 5px;
             margin-top: 5px;
         }
@@ -172,8 +197,8 @@
             overflow-y: auto;
         }
         #userList div {
-            margin: 10px 0;
-            padding: 10px;
+            margin: 5px 0;
+            padding: 8px;
             background: rgba(255, 255, 255, 0.1);
             border-radius: 5px;
             display: flex;
@@ -192,15 +217,18 @@
             left: 50%;
             transform: translate(-50%, -50%);
             background: rgba(0, 0, 0, 0.9);
-            padding: 30px;
+            padding: 20px;
             border-radius: 10px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
             text-align: center;
+            width: 90%;
+            max-width: 300px;
         }
         input {
-            padding: 10px;
-            margin: 10px;
-            width: 200px;
+            padding: 8px;
+            margin: 8px;
+            width: 100%;
+            max-width: 200px;
             border: none;
             border-radius: 5px;
             background: rgba(255, 255, 255, 0.9);
@@ -208,12 +236,13 @@
         }
         .status-icon {
             display: inline-block;
-            width: 20px;
-            height: 20px;
-            margin: 0 5px;
+            width: 16px;
+            height: 16px;
+            margin: 0 3px;
             text-align: center;
-            line-height: 20px;
+            line-height: 16px;
             border-radius: 50%;
+            font-size: 12px;
         }
         .mic-on { background-color: #4CAF50; }
         .mic-off { background-color: #ff4444; }
@@ -221,15 +250,15 @@
         .screen-off { background-color: #ff4444; }
         .control-icons {
             display: flex;
-            gap: 10px;
-            padding: 10px 0;
+            gap: 8px;
+            padding: 8px 0;
         }
         .control-icon {
-            font-size: 24px;
+            font-size: 20px;
             color: #fff;
             cursor: pointer;
             background: rgba(255, 255, 255, 0.1);
-            padding: 10px;
+            padding: 8px;
             border-radius: 50%;
             transition: background 0.3s;
         }
@@ -242,15 +271,16 @@
         .popup {
             display: none;
             position: absolute;
-            bottom: 60px;
-            left: 20px;
+            bottom: 50px;
+            left: 10px;
             background: rgba(0, 0, 0, 0.9);
-            padding: 15px;
+            padding: 10px;
             border-radius: 10px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
             z-index: 1000;
             color: #fff;
-            width: 260px;
+            width: 90%;
+            max-width: 260px;
         }
         .popup select, .popup input {
             width: 100%;
@@ -262,7 +292,7 @@
         }
         .popup button {
             width: 100%;
-            padding: 10px;
+            padding: 8px;
             background: #4CAF50;
             color: white;
             border: none;
@@ -276,22 +306,22 @@
         .user-options {
             display: none;
             position: absolute;
-            top: 50px;
+            top: 40px;
             left: 0;
             background: rgba(0, 0, 0, 0.95);
-            padding: 10px;
+            padding: 8px;
             border-radius: 10px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
             z-index: 1000;
-            width: 200px;
+            width: 180px;
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
         .user-options .option {
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 8px;
-            margin: 5px 0;
+            gap: 8px;
+            padding: 6px;
+            margin: 3px 0;
             background: rgba(255, 255, 255, 0.1);
             border-radius: 5px;
             cursor: pointer;
@@ -301,11 +331,11 @@
             background: rgba(255, 255, 255, 0.2);
         }
         .user-options .option span {
-            font-size: 18px;
+            font-size: 16px;
         }
         .user-options input[type="range"] {
             width: 100%;
-            margin: 5px 0;
+            margin: 3px 0;
         }
     </style>
 </head>
@@ -323,7 +353,7 @@
             </div>
             <div class="control-icons">
                 <span id="audioIcon" class="control-icon" onclick="toggleAudio()">🎤</span>
-                <span id="streamIcon" class="control-icon" onclick="toggleStream()">🖥️</span>
+                <span id="streamIcon" class="control-icon" onclick="toggleStream()">📹</span>
             </div>
             <div id="audioPopup" class="popup">
                 <h4>Ses Ayarları</h4>
@@ -339,9 +369,8 @@
                 <h4>Yayın Ayarları</h4>
                 <label>Yayın Türü:</label>
                 <select id="streamType">
-                    <option value="screen">Tam Ekran</option>
-                    <option value="window">Pencere</option>
-                    <option value="tab">Sekme</option>
+                    <option value="camera">Kamera</option>
+                    <option value="screen">Ekran Paylaşımı (Yalnızca PC)</option>
                 </select>
                 <label>Görüntü Kalitesi:</label>
                 <select id="streamQuality">
@@ -359,7 +388,7 @@
         </div>
         <div id="main">
             <div id="streamArea">
-                <video id="streamVideo" autoplay playsinline controls></video>
+                <video id="streamVideo" autoplay playsinline controls muted></video>
                 <div class="stream-controls">
                     <span class="stream-control-icon" onclick="toggleStreamMute()">🔊</span>
                     <span class="stream-control-icon" onclick="toggleFullscreen()">⛶</span>
@@ -386,7 +415,7 @@
         let streamPeerConnection = null;
         let usernameColors = {};
         let pendingOffers = new Map();
-        let isStreamMuted = false;
+        let isStreamMuted = true;
         let isAudioActive = false;
         let isStreamActive = false;
         const configuration = {
@@ -461,7 +490,7 @@
             if (isStreamActive) {
                 // Yayın akışını kapat
                 if (localStream) {
-                    localStream.getVideoTracks().forEach(track => track.stop());
+                    localStream.getTracks().forEach(track => track.stop());
                     localStream = null;
                 }
                 ws.send(JSON.stringify({ type: 'toggleStream', id: myId, state: false }));
@@ -574,8 +603,13 @@
                 if (localStream) {
                     localStream.getTracks().forEach(track => track.stop());
                 }
-                const screenStream = await navigator.mediaDevices.getDisplayMedia(constraints);
-                localStream = screenStream;
+                if (streamType === 'screen' && !navigator.mediaDevices.getDisplayMedia) {
+                    throw new Error('Ekran paylaşımı bu cihazda desteklenmiyor.');
+                }
+                const stream = streamType === 'screen'
+                    ? await navigator.mediaDevices.getDisplayMedia(constraints)
+                    : await navigator.mediaDevices.getUserMedia(constraints);
+                localStream = stream;
                 console.log('Yayın akışı başlatıldı:', localStream.getTracks());
                 ws.send(JSON.stringify({ type: 'toggleStream', id: myId, state: true }));
                 document.getElementById('streamPopup').style.display = 'none';
@@ -596,7 +630,7 @@
                 });
             } catch (error) {
                 console.error('Yayın hatası:', error);
-                alert('Ekran paylaşımı başlatılamadı. Lütfen tarayıcınızın ekran paylaşımına izin verdiğinden emin olun. Not: iOS Safari ekran paylaşımını desteklemez, lütfen Chrome kullanmayı deneyin.');
+                alert('Yayın başlatılamadı. Lütfen tarayıcınızın kamera veya ekran paylaşımına izin verdiğinden emin olun. Not: iOS Safari ekran paylaşımını desteklemez, lütfen Chrome kullanmayı deneyin veya kamera seçeneğini seçin.');
             }
         }
 
@@ -681,7 +715,7 @@
                 div.innerHTML = `
                     ${user.username}
                     <span class="status-icon ${user.audio ? 'mic-on' : 'mic-off'}">🎤</span>
-                    <span class="status-icon ${user.stream ? 'screen-on' : 'screen-off'}">🖥️</span>
+                    <span class="status-icon ${user.stream ? 'screen-on' : 'screen-off'}">📹</span>
                     <div class="user-options" id="options-${user.id}">
                         <div class="option" onclick="muteUser(${user.id})">
                             <span>${mutedUsers.has(user.id) ? '🔊' : '🔇'}</span>
@@ -732,6 +766,7 @@
                         streamVideo.srcObject = event.streams[0];
                         streamArea.style.display = 'block';
                         chatArea.classList.add('stream-active');
+                        streamVideo.play().catch(err => console.error('Video oynatma hatası:', err));
                     }
                 };
 
@@ -783,6 +818,7 @@
                     streamVideo.srcObject = event.streams[0];
                     streamArea.style.display = 'block';
                     chatArea.classList.add('stream-active');
+                    streamVideo.play().catch(err => console.error('Video oynatma hatası:', err));
                 };
 
                 pc.oniceconnectionstatechange = () => {
