@@ -3,407 +3,148 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sesli Sohbet ve Ekran Paylaşımı</title>
+    <title>Canlı Yayın ve Sesli Sohbet</title>
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: Arial, sans-serif;
             margin: 0;
-            padding: 0;
+            padding: 10px;
             background: #000;
             color: #fff;
             overflow-x: hidden;
         }
-        .container {
+        #login, #app {
             display: flex;
             flex-direction: column;
-            max-width: 1400px;
-            margin: 10px auto;
-            height: calc(100vh - 20px);
-        }
-        @media (min-width: 768px) {
-            .container {
-                flex-direction: row;
-            }
-        }
-        #sidebar {
-            width: 100%;
-            max-width: 300px;
-            padding: 10px;
-            background: rgba(0, 0, 0, 0.8);
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-        @media (min-width: 768px) {
-            #sidebar {
-                width: 300px;
-            }
-        }
-        #main {
-            flex: 1;
-            padding: 10px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            position: relative;
-        }
-        #chatArea {
-            width: 100%;
+            gap: 10px;
             max-width: 800px;
-            height: 50vh;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
+            margin: 0 auto;
+        }
+        #app {
+            display: none;
+        }
+        h2, h3 {
+            text-align: center;
+        }
+        button {
             padding: 10px;
-            overflow-y: auto;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(5px);
-            transition: height 0.3s;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
         }
-        #chatArea.stream-active {
-            height: 30vh;
+        button:hover {
+            background: #45a049;
         }
-        @media (min-width: 768px) {
-            #chatArea {
-                height: 80vh;
-            }
-            #chatArea.stream-active {
-                height: 40vh;
-            }
+        button:disabled {
+            background: #888;
+            cursor: not-allowed;
+        }
+        input {
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            font-size: 16px;
+        }
+        #userList div {
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 5px 0;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         #streamArea {
             display: none;
-            width: 100%;
-            max-width: 800px;
-            height: 30vh;
-            background: rgba(0, 0, 0, 0.9);
-            border-radius: 10px;
-            padding: 5px;
-            margin-bottom: 5px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            margin-top: 10px;
             position: relative;
         }
-        @media (min-width: 768px) {
-            #streamArea {
-                height: 40vh;
-            }
-        }
-        #streamArea video {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            border-radius: 10px;
-        }
-        #streamArea.fullscreen video {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            z-index: 2000;
-            background: #000;
-        }
-        .stream-controls {
-            position: absolute;
-            bottom: 5px;
-            right: 5px;
-            display: flex;
-            gap: 5px;
-        }
-        .stream-control-icon {
-            font-size: 16px;
-            color: #fff;
-            cursor: pointer;
-            background: rgba(255, 255, 255, 0.1);
-            padding: 5px;
-            border-radius: 50%;
-            transition: background 0.3s;
-        }
-        .stream-control-icon:hover {
-            background: rgba(255, 255, 255, 0.3);
-        }
-        #chatInputArea {
+        #streamVideo {
             width: 100%;
             max-width: 800px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            margin-top: 5px;
-        }
-        #chatInput {
-            flex: 1;
-            padding: 8px;
-            border: none;
-            border-radius: 5px 0 0 5px;
-            background: rgba(255, 255, 255, 0.9);
-            color: #333;
-        }
-        #chatSendBtn {
-            padding: 8px 16px;
-            background: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 0 5px 5px 0;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-        #chatSendBtn:hover {
-            background: #45a049;
-        }
-        .file-btn {
-            padding: 8px;
-            background: #2196F3;
-            color: white;
-            border: none;
+            height: auto;
+            background: #000;
             border-radius: 5px;
-            cursor: pointer;
-            transition: background 0.3s;
         }
-        .file-btn:hover {
-            background: #1e88e5;
+        #chatArea {
+            height: 300px;
+            overflow-y: auto;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
         }
         .chat-message {
             margin: 5px 0;
-            padding: 8px;
-            border-radius: 5px;
+            padding: 5px;
             background: rgba(255, 255, 255, 0.2);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .chat-message .username {
-            padding: 5px 8px;
-            border-radius: 15px;
-            font-weight: bold;
-            margin-right: 8px;
-        }
-        .chat-message .timestamp {
-            font-size: 0.7em;
-            color: #ccc;
-        }
-        .chat-message img {
-            max-width: 150px;
-            max-height: 150px;
             border-radius: 5px;
-            margin-top: 5px;
         }
-        .chat-message a {
-            color: #4CAF50;
-            text-decoration: none;
+        .stream-controls {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            display: flex;
+            gap: 10px;
         }
-        #userList {
-            flex: 1;
-            overflow-y: auto;
-        }
-        #userList div {
-            margin: 5px 0;
-            padding: 8px;
+        .stream-control-btn {
+            padding: 5px 10px;
             background: rgba(255, 255, 255, 0.1);
-            border-radius: 5px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            transition: background 0.3s;
-            position: relative;
-            cursor: pointer;
-        }
-        #userList div:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-        #login {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.9);
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-            text-align: center;
-            width: 90%;
-            max-width: 300px;
-        }
-        input {
-            padding: 8px;
-            margin: 8px;
-            width: 100%;
-            max-width: 200px;
+            color: #fff;
             border: none;
             border-radius: 5px;
-            background: rgba(255, 255, 255, 0.9);
-            color: #333;
-        }
-        .status-icon {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            margin: 0 3px;
-            text-align: center;
-            line-height: 16px;
-            border-radius: 50%;
-            font-size: 12px;
-        }
-        .mic-on { background-color: #4CAF50; }
-        .mic-off { background-color: #ff4444; }
-        .screen-on { background-color: #4CAF50; }
-        .screen-off { background-color: #ff4444; }
-        .control-icons {
-            display: flex;
-            gap: 8px;
-            padding: 8px 0;
-        }
-        .control-icon {
-            font-size: 20px;
-            color: #fff;
             cursor: pointer;
-            background: rgba(255, 255, 255, 0.1);
-            padding: 8px;
-            border-radius: 50%;
-            transition: background 0.3s;
         }
-        .control-icon.active {
-            background: #4CAF50;
-        }
-        .control-icon:hover {
+        .stream-control-btn:hover {
             background: rgba(255, 255, 255, 0.3);
         }
-        .popup {
-            display: none;
-            position: absolute;
-            bottom: 50px;
-            left: 10px;
-            background: rgba(0, 0, 0, 0.9);
+        .status {
+            text-align: center;
             padding: 10px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-            z-index: 1000;
-            color: #fff;
-            width: 90%;
-            max-width: 260px;
-        }
-        .popup select, .popup input {
-            width: 100%;
-            padding: 5px;
-            margin: 5px 0;
-            border-radius: 5px;
-            background: rgba(255, 255, 255, 0.9);
-            color: #333;
-        }
-        .popup button {
-            width: 100%;
-            padding: 8px;
-            background: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-        .popup button:hover {
-            background: #45a049;
-        }
-        .user-options {
-            display: none;
-            position: absolute;
-            top: 40px;
-            left: 0;
-            background: rgba(0, 0, 0, 0.95);
-            padding: 8px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            width: 180px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .user-options .option {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px;
-            margin: 3px 0;
             background: rgba(255, 255, 255, 0.1);
             border-radius: 5px;
-            cursor: pointer;
-            transition: background 0.3s;
+            margin-top: 10px;
         }
-        .user-options .option:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-        .user-options .option span {
-            font-size: 16px;
-        }
-        .user-options input[type="range"] {
-            width: 100%;
-            margin: 3px 0;
+        @media (max-width: 600px) {
+            button, input {
+                font-size: 14px;
+                padding: 8px;
+            }
+            #chatArea {
+                height: 200px;
+            }
+            #streamVideo {
+                max-width: 100%;
+            }
         }
     </style>
 </head>
 <body>
     <div id="login">
-        <h2>Kullanıcı Adı Gir</h2>
+        <h2>Canlı Yayın ve Sesli Sohbet</h2>
         <input type="text" id="username" placeholder="Kullanıcı adın" required>
-        <button onclick="join()" style="background: #4CAF50;">Katıl</button>
+        <button onclick="join()">Katıl</button>
     </div>
-    <div class="container" id="app" style="display: none;">
-        <div id="sidebar">
-            <div>
-                <h3>Kullanıcılar</h3>
-                <div id="userList"></div>
-            </div>
-            <div class="control-icons">
-                <span id="audioIcon" class="control-icon" onclick="toggleAudio()">🎤</span>
-                <span id="streamIcon" class="control-icon" onclick="toggleStream()">📹</span>
-            </div>
-            <div id="audioPopup" class="popup">
-                <h4>Ses Ayarları</h4>
-                <label>Giriş Cihazı:</label>
-                <select id="audioInputDevice"></select>
-                <label>Çıkış Cihazı:</label>
-                <select id="audioOutputDevice"></select>
-                <label>Gürültü Engelleme:</label>
-                <input type="checkbox" id="noiseSuppression">
-                <button onclick="applyAudioSettings()">Uygula</button>
-            </div>
-            <div id="streamPopup" class="popup">
-                <h4>Yayın Ayarları</h4>
-                <label>Yayın Türü:</label>
-                <select id="streamType">
-                    <option value="camera">Kamera</option>
-                    <option value="screen">Ekran Paylaşımı (Yalnızca PC)</option>
-                </select>
-                <label>Görüntü Kalitesi:</label>
-                <select id="streamQuality">
-                    <option value="480p">480p</option>
-                    <option value="720p">720p</option>
-                    <option value="1080p">1080p</option>
-                </select>
-                <label>Kare Hızı:</label>
-                <select id="frameRate">
-                    <option value="30">30 FPS</option>
-                    <option value="60">60 FPS</option>
-                </select>
-                <button onclick="applyStreamSettings()">Yayını Başlat</button>
+    <div id="app">
+        <h3>Kullanıcılar</h3>
+        <div id="userList"></div>
+        <button id="audioBtn" onclick="toggleAudio()">Mikrofonu Aç</button>
+        <button id="streamBtn" onclick="toggleStream()">Kamerayı Aç</button>
+        <div id="streamArea">
+            <video id="streamVideo" autoplay playsinline muted></video>
+            <div class="stream-controls">
+                <button class="stream-control-btn" onclick="toggleStreamMute()">🔊</button>
+                <button class="stream-control-btn" onclick="toggleFullscreen()">⛶</button>
             </div>
         </div>
-        <div id="main">
-            <div id="streamArea">
-                <video id="streamVideo" autoplay playsinline controls muted></video>
-                <div class="stream-controls">
-                    <span class="stream-control-icon" onclick="toggleStreamMute()">🔊</span>
-                    <span class="stream-control-icon" onclick="toggleFullscreen()">⛶</span>
-                </div>
-            </div>
-            <div id="chatArea"></div>
-            <div id="chatInputArea">
-                <input type="text" id="chatInput" placeholder="Mesajınızı yazın..." onkeypress="if(event.key === 'Enter') sendChatMessage()">
-                <button class="file-btn" onclick="document.getElementById('fileInput').click()">📎</button>
-                <button class="file-btn" onclick="document.getElementById('photoInput').click()">📷</button>
-                <input type="file" id="fileInput" style="display: none;" onchange="sendFile(this.files[0])">
-                <input type="file" id="photoInput" accept="image/*" style="display: none;" onchange="sendPhoto(this.files[0])">
-                <button id="chatSendBtn" onclick="sendChatMessage()">Gönder</button>
-            </div>
-        </div>
+        <div id="chatArea"></div>
+        <input type="text" id="chatInput" placeholder="Mesajınızı yazın..." onkeypress="if(event.key === 'Enter') sendChatMessage()">
+        <button onclick="sendChatMessage()">Gönder</button>
+        <div id="status" class="status">Durum: Bağlantı bekleniyor...</div>
     </div>
 
     <script>
@@ -411,10 +152,7 @@
         let peerConnections = new Map();
         let ws;
         let myId;
-        let mutedUsers = new Set();
         let streamPeerConnection = null;
-        let usernameColors = {};
-        let pendingOffers = new Map();
         let isStreamMuted = true;
         let isAudioActive = false;
         let isStreamActive = false;
@@ -422,13 +160,15 @@
             iceServers: [
                 { urls: 'stun:stun.l.google.com:19302' },
                 { urls: 'stun:stun1.l.google.com:19302' },
-                { urls: 'stun:stun2.l.google.com:19302' },
-                { urls: 'stun:stun3.l.google.com:19302' },
-                { urls: 'stun:stun4.l.google.com:19302' },
                 {
-                    urls: 'turn:relay1.expressturn.com:3478',
-                    username: 'efW5J7X8J9K2L3',
-                    credential: '8J9K2L3M4N5P6'
+                    urls: 'turn:openrelay.metered.ca:80',
+                    username: 'openrelayproject',
+                    credential: 'openrelayproject'
+                },
+                {
+                    urls: 'turn:openrelay.metered.ca:443',
+                    username: 'openrelayproject',
+                    credential: 'openrelayproject'
                 }
             ]
         };
@@ -437,200 +177,136 @@
         const streamArea = document.getElementById('streamArea');
         const streamVideo = document.getElementById('streamVideo');
         const chatArea = document.getElementById('chatArea');
-        const audioIcon = document.getElementById('audioIcon');
-        const streamIcon = document.getElementById('streamIcon');
+        const audioBtn = document.getElementById('audioBtn');
+        const streamBtn = document.getElementById('streamBtn');
+        const statusDiv = document.getElementById('status');
 
         const wsUrl = `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}`;
         ws = new WebSocket(wsUrl);
-        ws.onopen = () => console.log('WebSocket bağlandı:', wsUrl);
+        ws.onopen = () => {
+            console.log('WebSocket bağlandı:', wsUrl);
+            statusDiv.textContent = 'Durum: Bağlandı';
+        };
         ws.onmessage = handleSignaling;
-        ws.onerror = (error) => console.error('WebSocket hatası:', error);
-        ws.onclose = () => console.log('WebSocket bağlantısı kapandı');
+        ws.onerror = (error) => {
+            console.error('WebSocket hatası:', error);
+            statusDiv.textContent = 'Durum: WebSocket hatası';
+        };
+        ws.onclose = () => {
+            console.log('WebSocket bağlantısı kapandı');
+            statusDiv.textContent = 'Durum: Bağlantı kapandı';
+        };
 
         function join() {
             const username = document.getElementById('username').value.trim();
             if (username) {
                 ws.send(JSON.stringify({ type: 'join', username }));
                 document.getElementById('login').style.display = 'none';
-                document.getElementById('app').style.display = 'flex';
-                // Medya izinlerini kontrol et
-                navigator.mediaDevices.getUserMedia({ audio: true, video: false })
-                    .then(() => console.log('Mikrofon izinleri alındı'))
-                    .catch(err => console.error('Mikrofon izinleri alınamadı:', err));
+                document.getElementById('app').style.display = 'block';
+                checkPermissions();
             } else {
                 alert('Lütfen bir kullanıcı adı gir!');
             }
         }
 
-        function getRandomColor(username) {
-            if (!usernameColors[username]) {
-                const colors = ['#FF6F61', '#6B5B95', '#88B04B', '#F7CAC9', '#92A8D1', '#955251', '#B565A7'];
-                usernameColors[username] = colors[Object.keys(usernameColors).length % colors.length];
+        async function checkPermissions() {
+            try {
+                await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+                console.log('Mikrofon ve kamera izinleri alındı');
+            } catch (err) {
+                console.error('İzinler alınamadı:', err);
+                statusDiv.textContent = 'Durum: Mikrofon veya kamera izni verilmedi. Lütfen cihaz ayarlarınızı kontrol edin.';
             }
-            return usernameColors[username];
         }
 
         async function toggleAudio() {
             if (isAudioActive) {
-                // Ses akışını kapat
                 if (localStream) {
                     localStream.getAudioTracks().forEach(track => track.stop());
                     localStream = null;
                 }
                 ws.send(JSON.stringify({ type: 'toggleAudio', id: myId, state: false }));
                 isAudioActive = false;
-                audioIcon.classList.remove('active');
+                audioBtn.textContent = 'Mikrofonu Aç';
+                statusDiv.textContent = 'Durum: Mikrofon kapatıldı';
             } else {
-                // Ses ayarları popup'ını aç
-                toggleAudioPopup();
+                try {
+                    localStream = await navigator.mediaDevices.getUserMedia({
+                        audio: {
+                            noiseSuppression: true,
+                            echoCancellation: true,
+                            autoGainControl: true
+                        },
+                        video: false
+                    });
+                    console.log('Ses akışı başlatıldı:', localStream.getTracks());
+                    ws.send(JSON.stringify({ type: 'toggleAudio', id: myId, state: true }));
+                    isAudioActive = true;
+                    audioBtn.textContent = 'Mikrofonu Kapat';
+                    statusDiv.textContent = 'Durum: Mikrofon açıldı';
+
+                    peerConnections.forEach((pc, peerId) => {
+                        if (pc.signalingState === 'stable') {
+                            localStream.getTracks().forEach(track => {
+                                const sender = pc.getSenders().find(s => s.track && s.track.kind === track.kind);
+                                if (sender) {
+                                    sender.replaceTrack(track);
+                                } else {
+                                    pc.addTrack(track, localStream);
+                                }
+                            });
+                        }
+                    });
+                } catch (error) {
+                    console.error('Ses hatası:', error);
+                    statusDiv.textContent = 'Durum: Mikrofon açılamadı. Lütfen cihaz izinlerini kontrol edin.';
+                }
             }
         }
 
         async function toggleStream() {
             if (isStreamActive) {
-                // Yayın akışını kapat
                 if (localStream) {
                     localStream.getTracks().forEach(track => track.stop());
                     localStream = null;
                 }
                 ws.send(JSON.stringify({ type: 'toggleStream', id: myId, state: false }));
                 isStreamActive = false;
-                streamIcon.classList.remove('active');
+                streamBtn.textContent = 'Kamerayı Aç';
+                statusDiv.textContent = 'Durum: Kamera kapatıldı';
             } else {
-                // Yayın ayarları popup'ını aç
-                toggleStreamPopup();
-            }
-        }
+                try {
+                    const constraints = {
+                        video: {
+                            width: { ideal: 1280 },
+                            height: { ideal: 720 },
+                            frameRate: { ideal: 30 }
+                        },
+                        audio: true
+                    };
+                    localStream = await navigator.mediaDevices.getUserMedia(constraints);
+                    console.log('Kamera akışı başlatıldı:', localStream.getTracks());
+                    ws.send(JSON.stringify({ type: 'toggleStream', id: myId, state: true }));
+                    isStreamActive = true;
+                    streamBtn.textContent = 'Kamerayı Kapat';
+                    statusDiv.textContent = 'Durum: Kamera açıldı';
 
-        async function toggleAudioPopup() {
-            const popup = document.getElementById('audioPopup');
-            popup.style.display = popup.style.display === 'block' ? 'none' : 'block';
-            if (popup.style.display === 'block') {
-                await populateAudioDevices();
-            }
-        }
-
-        async function toggleStreamPopup() {
-            const popup = document.getElementById('streamPopup');
-            popup.style.display = popup.style.display === 'block' ? 'none' : 'block';
-        }
-
-        async function populateAudioDevices() {
-            try {
-                const devices = await navigator.mediaDevices.enumerateDevices();
-                const audioInputSelect = document.getElementById('audioInputDevice');
-                const audioOutputSelect = document.getElementById('audioOutputDevice');
-
-                audioInputSelect.innerHTML = '';
-                audioOutputSelect.innerHTML = '';
-
-                devices.forEach(device => {
-                    const option = document.createElement('option');
-                    option.value = device.deviceId;
-                    option.text = device.label || `Cihaz ${device.deviceId}`;
-                    if (device.kind === 'audioinput') {
-                        audioInputSelect.appendChild(option);
-                    } else if (device.kind === 'audiooutput') {
-                        audioOutputSelect.appendChild(option);
-                    }
-                });
-            } catch (error) {
-                console.error('Cihaz listesi alınamadı:', error);
-                alert('Cihaz listesi alınamadı. Lütfen tarayıcı izinlerini kontrol edin.');
-            }
-        }
-
-        async function applyAudioSettings() {
-            const audioInputDevice = document.getElementById('audioInputDevice').value;
-            const audioOutputDevice = document.getElementById('audioOutputDevice').value;
-            const noiseSuppression = document.getElementById('noiseSuppression').checked;
-
-            try {
-                if (localStream) {
-                    localStream.getTracks().forEach(track => track.stop());
+                    peerConnections.forEach((pc, peerId) => {
+                        if (pc.signalingState === 'stable') {
+                            localStream.getTracks().forEach(track => {
+                                const sender = pc.getSenders().find(s => s.track && s.track.kind === track.kind);
+                                if (sender) {
+                                    sender.replaceTrack(track);
+                                } else {
+                                    pc.addTrack(track, localStream);
+                                }
+                            });
+                        }
+                    });
+                } catch (error) {
+                    console.error('Kamera hatası:', error);
+                    statusDiv.textContent = 'Durum: Kamera açılamadı. Lütfen cihaz izinlerini kontrol edin.';
                 }
-                localStream = await navigator.mediaDevices.getUserMedia({
-                    audio: {
-                        deviceId: audioInputDevice ? { exact: audioInputDevice } : undefined,
-                        noiseSuppression: noiseSuppression,
-                        echoCancellation: true,
-                        autoGainControl: true
-                    }
-                });
-                console.log('Ses akışı başlatıldı:', localStream.getTracks());
-                ws.send(JSON.stringify({ type: 'toggleAudio', id: myId, state: true }));
-                document.getElementById('audioPopup').style.display = 'none';
-                isAudioActive = true;
-                audioIcon.classList.add('active');
-
-                if (streamVideo.srcObject) {
-                    streamVideo.setSinkId(audioOutputDevice).catch(err => console.error('Çıkış cihazı ayarlama hatası:', err));
-                }
-
-                peerConnections.forEach((pc, peerId) => {
-                    if (pc.signalingState === 'stable') {
-                        localStream.getTracks().forEach(track => {
-                            const sender = pc.getSenders().find(s => s.track && s.track.kind === track.kind);
-                            if (sender) {
-                                sender.replaceTrack(track);
-                            } else {
-                                pc.addTrack(track, localStream);
-                            }
-                        });
-                    }
-                });
-            } catch (error) {
-                console.error('Ses hatası:', error);
-                alert('Mikrofon erişiminde bir hata oluştu. Lütfen cihaz izinlerini kontrol edin ve tarayıcınızın mikrofon erişimine izin verdiğinden emin olun.');
-            }
-        }
-
-        async function applyStreamSettings() {
-            const streamType = document.getElementById('streamType').value;
-            const streamQuality = document.getElementById('streamQuality').value;
-            const frameRate = parseInt(document.getElementById('frameRate').value);
-
-            const constraints = {
-                video: {
-                    width: streamQuality === '480p' ? 640 : streamQuality === '720p' ? 1280 : 1920,
-                    height: streamQuality === '480p' ? 480 : streamQuality === '720p' ? 720 : 1080,
-                    frameRate: frameRate
-                },
-                audio: true
-            };
-
-            try {
-                if (localStream) {
-                    localStream.getTracks().forEach(track => track.stop());
-                }
-                if (streamType === 'screen' && !navigator.mediaDevices.getDisplayMedia) {
-                    throw new Error('Ekran paylaşımı bu cihazda desteklenmiyor.');
-                }
-                const stream = streamType === 'screen'
-                    ? await navigator.mediaDevices.getDisplayMedia(constraints)
-                    : await navigator.mediaDevices.getUserMedia(constraints);
-                localStream = stream;
-                console.log('Yayın akışı başlatıldı:', localStream.getTracks());
-                ws.send(JSON.stringify({ type: 'toggleStream', id: myId, state: true }));
-                document.getElementById('streamPopup').style.display = 'none';
-                isStreamActive = true;
-                streamIcon.classList.add('active');
-
-                peerConnections.forEach((pc, peerId) => {
-                    if (pc.signalingState === 'stable') {
-                        localStream.getTracks().forEach(track => {
-                            const sender = pc.getSenders().find(s => s.track && s.track.kind === track.kind);
-                            if (sender) {
-                                sender.replaceTrack(track);
-                            } else {
-                                pc.addTrack(track, localStream);
-                            }
-                        });
-                    }
-                });
-            } catch (error) {
-                console.error('Yayın hatası:', error);
-                alert('Yayın başlatılamadı. Lütfen tarayıcınızın kamera veya ekran paylaşımına izin verdiğinden emin olun. Not: iOS Safari ekran paylaşımını desteklemez, lütfen Chrome kullanmayı deneyin veya kamera seçeneğini seçin.');
             }
         }
 
@@ -644,11 +320,6 @@
             } else if (data.type === 'userList') {
                 updateUserList(data.users);
             } else if (data.type === 'offer') {
-                if (pendingOffers.has(data.from)) {
-                    console.log(`Zaten bir offer işleniyor (${data.from}), bu offer atlanıyor.`);
-                    return;
-                }
-                pendingOffers.set(data.from, true);
                 handleOffer(data.offer, data.from);
             } else if (data.type === 'answer') {
                 handleAnswer(data.from, data.answer);
@@ -660,48 +331,10 @@
                 } else {
                     console.log('Yayın akışı mevcut değil veya kapalı.');
                 }
-            } else if (data.type === 'muteUser' && data.targetId === myId) {
-                if (localStream && localStream.getAudioTracks().length) {
-                    localStream.getAudioTracks()[0].enabled = !data.muted;
-                }
-            } else if (data.type === 'volumeChange' && data.targetId === myId) {
-                if (streamVideo.srcObject) {
-                    streamVideo.volume = data.volume;
-                }
             } else if (data.type === 'chatMessage') {
                 const messageDiv = document.createElement('div');
                 messageDiv.className = 'chat-message';
-                messageDiv.innerHTML = `
-                    <div>
-                        <span class="username" style="background: ${getRandomColor(data.username)}">${data.username}</span>
-                        ${data.message}
-                    </div>
-                    <span class="timestamp">${data.timestamp}</span>
-                `;
-                chatArea.appendChild(messageDiv);
-                chatArea.scrollTop = chatArea.scrollHeight;
-            } else if (data.type === 'fileMessage') {
-                const messageDiv = document.createElement('div');
-                messageDiv.className = 'chat-message';
-                if (data.fileType.startsWith('image/')) {
-                    messageDiv.innerHTML = `
-                        <div>
-                            <span class="username" style="background: ${getRandomColor(data.username)}">${data.username}</span>
-                            <br>
-                            <img src="${data.fileData}" alt="${data.fileName}">
-                        </div>
-                        <span class="timestamp">${data.timestamp}</span>
-                    `;
-                } else {
-                    messageDiv.innerHTML = `
-                        <div>
-                            <span class="username" style="background: ${getRandomColor(data.username)}">${data.username}</span>
-                            <br>
-                            <a href="${data.fileData}" download="${data.fileName}">${data.fileName}</a>
-                        </div>
-                        <span class="timestamp">${data.timestamp}</span>
-                    `;
-                }
+                messageDiv.textContent = `${data.username}: ${data.message} (${data.timestamp})`;
                 chatArea.appendChild(messageDiv);
                 chatArea.scrollTop = chatArea.scrollHeight;
             }
@@ -711,27 +344,13 @@
             userList.innerHTML = '';
             users.forEach(user => {
                 const div = document.createElement('div');
-                div.dataset.id = user.id;
-                div.innerHTML = `
-                    ${user.username}
-                    <span class="status-icon ${user.audio ? 'mic-on' : 'mic-off'}">🎤</span>
-                    <span class="status-icon ${user.stream ? 'screen-on' : 'screen-off'}">📹</span>
-                    <div class="user-options" id="options-${user.id}">
-                        <div class="option" onclick="muteUser(${user.id})">
-                            <span>${mutedUsers.has(user.id) ? '🔊' : '🔇'}</span>
-                        </div>
-                        <div class="option" onclick="document.getElementById('volume-${user.id}').style.display = 'block'">
-                            <span>🔈</span>
-                        </div>
-                        <input type="range" id="volume-${user.id}" min="0" max="1" step="0.1" value="1" oninput="setVolume(${user.id})" style="display: none;">
-                        <div class="option" onclick="requestStream(${user.id}, '${user.username}')">
-                            <span>▶️</span>
-                        </div>
-                    </div>
-                `;
-                div.onclick = (e) => {
-                    const options = document.getElementById(`options-${user.id}`);
-                    options.style.display = options.style.display === 'block' ? 'none' : 'block';
+                div.textContent = `${user.username} (Mikrofon: ${user.audio ? 'Açık' : 'Kapalı'}, Kamera: ${user.stream ? 'Açık' : 'Kapalı'})`;
+                div.onclick = () => {
+                    if (user.stream) {
+                        requestStream(user.id, user.username);
+                    } else {
+                        statusDiv.textContent = `Durum: ${user.username} kullanıcısının kamerası kapalı.`;
+                    }
                 };
                 userList.appendChild(div);
             });
@@ -765,8 +384,10 @@
                     if (streamPeerConnection === pc) {
                         streamVideo.srcObject = event.streams[0];
                         streamArea.style.display = 'block';
-                        chatArea.classList.add('stream-active');
-                        streamVideo.play().catch(err => console.error('Video oynatma hatası:', err));
+                        streamVideo.play().catch(err => {
+                            console.error('Video oynatma hatası:', err);
+                            statusDiv.textContent = 'Durum: Video oynatılamadı. Lütfen tarayıcı uyumluluğunu kontrol edin.';
+                        });
                     }
                 };
 
@@ -775,11 +396,10 @@
                     if (pc.iceConnectionState === 'failed') {
                         console.error('ICE bağlantısı başarısız oldu:', to);
                         pc.restartIce();
+                        statusDiv.textContent = 'Durum: Bağlantı başarısız oldu, yeniden deneniyor...';
+                    } else if (pc.iceConnectionState === 'connected') {
+                        statusDiv.textContent = 'Durum: Bağlantı başarılı';
                     }
-                };
-
-                pc.onicegatheringstatechange = () => {
-                    console.log(`ICE gathering state (${to}):`, pc.iceGatheringState);
                 };
 
                 const offer = await pc.createOffer();
@@ -787,16 +407,12 @@
                 ws.send(JSON.stringify({ type: 'offer', offer, from: myId, to }));
             } catch (error) {
                 console.error('Offer oluşturma hatası:', error);
+                statusDiv.textContent = 'Durum: Bağlantı hatası';
             }
         }
 
         async function handleOffer(offer, from) {
             try {
-                if (peerConnections.has(from) && peerConnections.get(from).signalingState !== 'closed') {
-                    console.log(`Zaten bir bağlantı var (${from}), mevcut bağlantı kullanılıyor.`);
-                    return;
-                }
-
                 const pc = new RTCPeerConnection(configuration);
                 peerConnections.set(from, pc);
                 streamPeerConnection = pc;
@@ -817,8 +433,10 @@
                     console.log(`Yeni track alındı (${from}):`, event.streams[0].getTracks());
                     streamVideo.srcObject = event.streams[0];
                     streamArea.style.display = 'block';
-                    chatArea.classList.add('stream-active');
-                    streamVideo.play().catch(err => console.error('Video oynatma hatası:', err));
+                    streamVideo.play().catch(err => {
+                        console.error('Video oynatma hatası:', err);
+                        statusDiv.textContent = 'Durum: Video oynatılamadı. Lütfen tarayıcı uyumluluğunu kontrol edin.';
+                    });
                 };
 
                 pc.oniceconnectionstatechange = () => {
@@ -826,17 +444,14 @@
                     if (pc.iceConnectionState === 'failed') {
                         console.error('ICE bağlantısı başarısız oldu:', from);
                         pc.restartIce();
+                        statusDiv.textContent = 'Durum: Bağlantı başarısız oldu, yeniden deneniyor...';
+                    } else if (pc.iceConnectionState === 'connected') {
+                        statusDiv.textContent = 'Durum: Bağlantı başarılı';
                     }
                 };
-
-                pc.onicegatheringstatechange = () => {
-                    console.log(`ICE gathering state (${from}):`, pc.iceGatheringState);
-                };
-
-                pendingOffers.delete(from);
             } catch (error) {
                 console.error('Offer işleme hatası:', error);
-                pendingOffers.delete(from);
+                statusDiv.textContent = 'Durum: Bağlantı hatası';
             }
         }
 
@@ -847,9 +462,8 @@
                     await pc.setRemoteDescription(new RTCSessionDescription(answer));
                 } catch (error) {
                     console.error('Answer işleme hatası:', error);
+                    statusDiv.textContent = 'Durum: Bağlantı hatası';
                 }
-            } else {
-                console.log(`Answer işlenemedi, bağlantı durumu uygun değil (${from}):`, pc ? pc.signalingState : 'Bağlantı yok');
             }
         }
 
@@ -872,16 +486,17 @@
             }
             streamVideo.srcObject = null;
             streamArea.style.display = 'none';
-            chatArea.classList.remove('stream-active');
             ws.send(JSON.stringify({ type: 'requestStream', to: targetId, from: myId }));
+            statusDiv.textContent = `Durum: ${username} kullanıcısının yayını isteniyor...`;
         }
 
         function toggleFullscreen() {
             if (!document.fullscreenElement) {
-                streamArea.classList.add('fullscreen');
-                streamVideo.requestFullscreen().catch(err => console.error('Tam ekran hatası:', err));
+                streamVideo.requestFullscreen().catch(err => {
+                    console.error('Tam ekran hatası:', err);
+                    statusDiv.textContent = 'Durum: Tam ekran açılamadı';
+                });
             } else {
-                streamArea.classList.remove('fullscreen');
                 document.exitFullscreen();
             }
         }
@@ -889,22 +504,8 @@
         function toggleStreamMute() {
             isStreamMuted = !isStreamMuted;
             streamVideo.muted = isStreamMuted;
-            const muteIcon = document.querySelector('.stream-controls .stream-control-icon:first-child');
-            muteIcon.textContent = isStreamMuted ? '🔇' : '🔊';
-        }
-
-        function muteUser(targetId) {
-            if (mutedUsers.has(targetId)) {
-                mutedUsers.delete(targetId);
-            } else {
-                mutedUsers.add(targetId);
-            }
-            ws.send(JSON.stringify({ type: 'muteUser', targetId, muted: mutedUsers.has(targetId) }));
-        }
-
-        function setVolume(targetId) {
-            const volume = document.getElementById(`volume-${targetId}`).value;
-            ws.send(JSON.stringify({ type: 'volumeChange', targetId, volume: parseFloat(volume) }));
+            const muteBtn = document.querySelector('.stream-controls .stream-control-btn:first-child');
+            muteBtn.textContent = isStreamMuted ? '🔇' : '🔊';
         }
 
         function sendChatMessage() {
@@ -915,54 +516,13 @@
             }
         }
 
-        function sendFile(file) {
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                const fileData = event.target.result;
-                ws.send(JSON.stringify({
-                    type: 'fileMessage',
-                    username: document.getElementById('username').value,
-                    fileName: file.name,
-                    fileData: fileData,
-                    fileType: file.type
-                }));
-            };
-            reader.readAsDataURL(file);
-        }
-
-        function sendPhoto(photo) {
-            if (!photo) return;
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                const fileData = event.target.result;
-                ws.send(JSON.stringify({
-                    type: 'fileMessage',
-                    username: document.getElementById('username').value,
-                    fileName: photo.name,
-                    fileData: fileData,
-                    fileType: photo.type
-                }));
-            };
-            reader.readAsDataURL(photo);
-        }
-
-        function stopStreams() {
+        window.addEventListener('beforeunload', () => {
             if (localStream) {
                 localStream.getTracks().forEach(track => track.stop());
-                localStream = null;
             }
             peerConnections.forEach(pc => pc.close());
-            peerConnections.clear();
-            ws.send(JSON.stringify({ type: 'toggleAudio', id: myId, state: false }));
-            ws.send(JSON.stringify({ type: 'toggleStream', id: myId, state: false }));
-            streamArea.style.display = 'none';
-            chatArea.classList.remove('stream-active');
-            isAudioActive = false;
-            isStreamActive = false;
-            audioIcon.classList.remove('active');
-            streamIcon.classList.remove('active');
-        }
+            ws.close();
+        });
     </script>
 </body>
 </html>
